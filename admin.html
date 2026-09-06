@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Electro Variety — Admin</title>
+<style>
+body{margin:0;background:#eef0f3;font-family:Arial;color:#111827}header{background:#111827;color:#fff;padding:15px;font-weight:900}.wrap{max-width:850px;margin:auto;padding:16px}.card{background:#fff;border-radius:15px;padding:18px;margin-bottom:15px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}label{font-size:12px;font-weight:900}input{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:9px;margin-top:5px}button{border:0;border-radius:9px;padding:11px 15px;font-weight:900;cursor:pointer}.blue{background:#2563eb;color:#fff}.red{background:#fee2e2;color:#991b1b}.dark{background:#111827;color:#fff}.hidden{display:none}.item{display:flex;gap:10px;align-items:center;border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin-top:8px}.thumb{width:58px;height:58px;object-fit:cover;border-radius:8px}.info{flex:1}.small{font-size:12px;color:#6b7280}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}.seller-form{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-top:10px}.seller-status{margin-top:9px}.badge{font-size:11px;font-weight:900;padding:4px 7px;border-radius:999px;background:#e5e7eb}#login{max-width:420px;margin:50px auto}@media(max-width:600px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script></head>
+<body><header>⚙️ ELECTRO VARIETY · ADMINISTRADOR <button id="logout" class="red hidden" style="float:right" onclick="signout()">Cerrar sesión</button></header>
+<div id="login" class="card"><h2>Acceso administrador</h2><label>Email</label><input id="email" type="email"><label style="display:block;margin-top:10px">Contraseña</label><input id="password" type="password"><button class="blue" style="width:100%;margin-top:13px" onclick="login()">🔐 Ingresar</button><div id="loginMsg" class="small" style="margin-top:9px"></div></div>
+<div id="app" class="wrap hidden"><div class="card"><h2 id="formTitle">Nuevo producto</h2><div class="grid">
+<div class="full"><label>Nombre</label><input id="name"></div><div><label>Subtítulo</label><input id="subtitle"></div><div><label>Categoría</label><input id="category"></div>
+<div><label>Cuota quincenal</label><input id="qprice"></div><div><label>Cantidad quincenal</label><input id="qcount" type="number"></div><div><label>Cuota mensual</label><input id="mprice"></div><div><label>Cantidad mensual</label><input id="mcount" type="number"></div>
+<div class="full"><label>Imagen (obligatoria al crear; opcional al editar)</label><input id="image" type="file" accept="image/*"></div></div>
+<div class="actions"><button class="blue" onclick="save()">💾 Guardar</button><button class="dark" onclick="resetForm()">Nuevo / cancelar edición</button></div><div id="status" class="small"></div></div>
+<div class="card"><h2>Productos</h2><div id="list">Cargando…</div></div><div class="card">
+<h2>👥 Vendedores</h2>
+<div class="seller-form">
+<div class="grid">
+<div><label>Nombre del vendedor</label><input id="sellerName" placeholder="Ej. Juan Pérez"></div>
+<div><label>Email de acceso</label><input id="sellerEmail" type="email" placeholder="juan@email.com"></div>
+<div><label>Contraseña inicial</label><input id="sellerPassword" type="password" placeholder="Mínimo 6 caracteres"></div>
+</div>
+<div class="actions"><button class="blue" onclick="createSeller()">➕ Crear vendedor</button></div>
+<div id="sellerStatus" class="small seller-status"></div>
+</div>
+<div id="sellerList" style="margin-top:14px">Cargando…</div>
+</div></div>
+<script>
+const db=supabase.createClient(EV_CONFIG.SUPABASE_URL,EV_CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:true}});let editing=null;
+const $=id=>document.getElementById(id);const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+db.auth.onAuthStateChange((_e,s)=>s?showApp():showLogin());
+function showLogin(){$("login").classList.remove("hidden");$("app").classList.add("hidden");$("logout").classList.add("hidden")}
+function showApp(){$("login").classList.add("hidden");$("app").classList.remove("hidden");$("logout").classList.remove("hidden");load();loadSellers()}
+async function login(){$("loginMsg").textContent="Ingresando…";const {error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});$("loginMsg").textContent=error?error.message:""}
+async function signout(){await db.auth.signOut()}
+async function load(){const {data,error}=await db.from("products").select("*").order("id",{ascending:false});if(error){$("list").textContent=error.message;return}$("list").innerHTML=data.map(p=>`<div class="item"><img class="thumb" src="${esc(p.image_url)}"><div class="info"><b>${esc(p.name)}</b><div class="small">${esc(p.category)} · ${esc(p.q_price)} × ${p.q_count} · ${esc(p.m_price)} × ${p.m_count} · ${p.active?"🟢 Publicado":"⚪ Oculto"}</div></div><button onclick="edit(${p.id})">✏️</button><button class="${p.active?"red":"blue"}" onclick="toggle(${p.id},${p.active})">${p.active?"Ocultar":"Publicar"}</button></div>`).join("")}
+
+async function loadSellers(){
+ const box=$("sellerList");
+ box.textContent="Cargando vendedores…";
+ const {data,error}=await db.from("seller_profiles").select("user_id,name,active,created_at").order("created_at",{ascending:false});
+ if(error){box.textContent="Error: "+error.message;return}
+ if(!data?.length){box.innerHTML='<div class="small">Todavía no hay vendedores creados.</div>';return}
+ box.innerHTML=data.map(s=>`<div class="item">
+   <div class="info">
+     <b>${esc(s.name)}</b>
+     <div class="small">Creado: ${new Date(s.created_at).toLocaleString("es-AR")} · ${s.active?"🟢 Acceso habilitado":"🔴 Acceso bloqueado"}</div>
+   </div>
+   <button class="${s.active?"red":"blue"}" onclick="toggleSeller('${s.user_id}',${s.active})">${s.active?"Desactivar":"Activar"}</button>
+ </div>`).join("")
+}
+async function createSeller(){
+ const name=$("sellerName").value.trim();
+ const email=$("sellerEmail").value.trim().toLowerCase();
+ const password=$("sellerPassword").value;
+ if(!name||!email||!password){$("sellerStatus").textContent="Completá nombre, email y contraseña.";return}
+ if(password.length<6){$("sellerStatus").textContent="La contraseña debe tener al menos 6 caracteres.";return}
+ $("sellerStatus").textContent="Creando vendedor…";
+ const {data,error}=await db.functions.invoke("create-seller",{body:{name,email,password}});
+ if(error){
+   let msg=error.message||"No se pudo crear el vendedor";
+   try{if(error.context){const body=await error.context.json();if(body?.error)msg=body.error}}catch(_){}
+   $("sellerStatus").textContent="Error: "+msg;
+   return
+ }
+ if(data?.error){$("sellerStatus").textContent="Error: "+data.error;return}
+ $("sellerStatus").textContent="✅ Vendedor creado correctamente.";
+ $("sellerName").value="";$("sellerEmail").value="";$("sellerPassword").value="";
+ loadSellers()
+}
+async function toggleSeller(userId,active){
+ const action=active?"desactivar":"activar";
+ if(!confirm(`¿Querés ${action} este vendedor?`))return;
+ const {error}=await db.from("seller_profiles").update({active:!active}).eq("user_id",userId);
+ if(error){alert("No se pudo cambiar el acceso: "+error.message);return}
+ loadSellers()
+}
+
+async function save(){
+ const required=[$("name").value.trim(),$("qprice").value.trim(),$("qcount").value,$("mprice").value.trim(),$("mcount").value];if(required.some(x=>!x)){ $("status").textContent="Completá nombre y ambas financiaciones.";return}
+ let imageUrl=editing?.image_url||"";const f=$("image").files[0];
+ if(f){$("status").textContent="Subiendo imagen…";const ext=(f.name.split(".").pop()||"jpg").toLowerCase(),path=`${crypto.randomUUID()}.${ext}`;const up=await db.storage.from("product-images").upload(path,f,{upsert:false});if(up.error){$("status").textContent="Error de imagen: "+up.error.message;return}imageUrl=db.storage.from("product-images").getPublicUrl(path).data.publicUrl}
+ if(!imageUrl){$("status").textContent="Elegí una imagen.";return}
+ const row={name:$("name").value.trim(),subtitle:$("subtitle").value.trim(),category:$("category").value.trim()||"Producto",q_price:$("qprice").value.trim(),q_count:Number($("qcount").value),m_price:$("mprice").value.trim(),m_count:Number($("mcount").value),image_url:imageUrl,active:true,updated_at:new Date().toISOString()};
+ const res=editing?await db.from("products").update(row).eq("id",editing.id):await db.from("products").insert(row);
+ $("status").textContent=res.error?"Error: "+res.error.message:"Guardado online correctamente.";if(!res.error){resetForm();load()}
+}
+async function edit(id){const {data,error}=await db.from("products").select("*").eq("id",id).single();if(error){alert(error.message);return}editing=data;$("formTitle").textContent="Editar producto";$("name").value=data.name;$("subtitle").value=data.subtitle;$("category").value=data.category;$("qprice").value=data.q_price;$("qcount").value=data.q_count;$("mprice").value=data.m_price;$("mcount").value=data.m_count;scrollTo({top:0,behavior:"smooth"})}
+function resetForm(){editing=null;$("formTitle").textContent="Nuevo producto";["name","subtitle","category","qprice","qcount","mprice","mcount"].forEach(id=>$(id).value="");$("image").value="";$("status").textContent=""}
+async function toggle(id,active){const {error}=await db.from("products").update({active:!active,updated_at:new Date().toISOString()}).eq("id",id);if(error)alert(error.message);else load()}
+</script></body></html>
