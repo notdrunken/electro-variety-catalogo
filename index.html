@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Electro Variety — Catálogo</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#e9ecef;font-family:Arial,sans-serif;color:#111827}
+header{background:#111827;color:#fff;padding:13px 15px;position:sticky;top:0;z-index:20}
+.head{max-width:760px;margin:auto;display:flex;align-items:center}.brand{font-weight:900;flex:1}.counter{font-size:13px}
+.tools{max-width:760px;margin:9px auto 0;display:flex;gap:7px}.tools input,.tools select{min-width:0;flex:1;padding:10px;border:0;border-radius:9px;font-size:14px}.tools select{max-width:190px}
+main{max-width:760px;margin:auto;background:#fff;min-height:calc(100vh - 100px);padding:18px}
+.msg{text-align:center;padding:45px 10px;color:#6b7280}.brand2{text-align:center;font-size:25px;font-weight:900}.tag{text-align:center;color:#6b7280;font-size:11px;margin:3px 0 15px}
+.category{width:max-content;margin:auto;background:#111827;color:#fff;border-radius:20px;padding:7px 17px;font-size:12px;font-weight:900}
+h1{text-align:center;color:#2563eb;font-size:24px;line-height:1.15}.img{width:100%;display:block;border-radius:10px}
+.finance{background:#f3f4f6;border-radius:15px;padding:15px;margin-top:15px}.ft{font-weight:900}.row{display:flex;justify-content:space-between;padding:11px 0;border-top:1px solid #d1d5db}.row:first-of-type{border-top:0}.label{color:#2563eb;font-weight:900}.value{font-weight:900;text-align:right}
+.share{width:100%;border:0;border-radius:999px;background:#25D366;color:#fff;padding:15px;font-size:16px;font-weight:900;margin-top:15px}.nav{display:flex;gap:8px;margin-top:10px}.nav button{flex:1;padding:11px;border:0;border-radius:9px;background:#111827;color:#fff;font-weight:900}.nav button:disabled{opacity:.3}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script>
+</head>
+<body>
+<header><div class="head"><div class="brand">ELECTRO VARIETY · CATÁLOGO</div><div id="counter" class="counter">—</div></div>
+<div class="tools"><input id="search" placeholder="🔎 Buscar producto"><select id="category"><option value="">Todas las categorías</option></select></div></header>
+<main id="app"><div class="msg">Cargando catálogo…</div></main>
+<script>
+let db,all=[],shown=[],pos=0;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+async function start(){
+ db=supabase.createClient(EV_CONFIG.SUPABASE_URL,EV_CONFIG.SUPABASE_ANON_KEY);
+ const {data,error}=await db.from("products").select("*").eq("active",true).order("id");
+ if(error){$("app").innerHTML='<div class="msg">No se pudo cargar el catálogo.</div>';return}
+ all=data||[]; shown=[...all]; fillCats(); render();
+}
+function fillCats(){const cats=[...new Set(all.map(p=>p.category).filter(Boolean))].sort();$("category").innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("")}
+function filter(){const q=$("search").value.toLowerCase().trim(),c=$("category").value;shown=all.filter(p=>(!q||(`${p.name} ${p.subtitle} ${p.category}`).toLowerCase().includes(q))&&(!c||p.category===c));pos=0;render()}
+$("search").addEventListener("input",filter);$("category").addEventListener("change",filter);
+function render(){
+ if(!shown.length){$("counter").textContent="0 / 0";$("app").innerHTML='<div class="msg">No se encontraron productos.</div>';return}
+ pos=Math.max(0,Math.min(pos,shown.length-1));const p=shown[pos];$("counter").textContent=`${pos+1} / ${shown.length}`;
+ $("app").innerHTML=`<div class="brand2">ELECTRO VARIETY</div><div class="tag">LA COMODIDAD PARA TU HOGAR</div>
+ <div class="category">${esc(p.category||"PRODUCTO")}</div><h1>${esc(p.name).toUpperCase()}<br>${esc(p.subtitle).toUpperCase()}</h1>
+ <img class="img" src="${esc(p.image_url)}" alt="${esc(p.name)}"><div class="finance"><div class="ft">FINANCIACIÓN</div>
+ <div class="row"><span class="label">QUINCENAL</span><span class="value">${esc(p.q_price)} × ${p.q_count} cuotas</span></div>
+ <div class="row"><span class="label">MENSUAL</span><span class="value">${esc(p.m_price)} × ${p.m_count} cuotas</span></div></div>
+ <button class="share" onclick="share()">🟢 COMPARTIR POR WHATSAPP</button>
+ <div class="nav"><button ${pos===0?"disabled":""} onclick="move(-1)">← Anterior</button><button ${pos===shown.length-1?"disabled":""} onclick="move(1)">Siguiente →</button></div>`;
+}
+function move(d){pos+=d;render();scrollTo({top:0,behavior:"smooth"})}
+async function share(){
+ const p=shown[pos],blob=await makeImage(p),file=new File([blob],(p.name||"producto").replace(/[^a-z0-9]+/gi,"-").toLowerCase()+".jpg",{type:"image/jpeg"});
+ if(navigator.share&&navigator.canShare?.({files:[file]})){try{await navigator.share({title:p.name,text:`${p.name}\nQuincenal: ${p.q_price} × ${p.q_count}\nMensual: ${p.m_price} × ${p.m_count}`,files:[file]})}catch(e){}}
+ else alert("Abrí el catálogo en Chrome de Android para compartir la ficha como imagen.");
+}
+function makeImage(p){return new Promise(resolve=>{const c=document.createElement("canvas"),x=c.getContext("2d");c.width=1200;c.height=1600;x.fillStyle="#fff";x.fillRect(0,0,1200,1600);x.textAlign="center";x.fillStyle="#111827";x.font="900 42px Arial";x.fillText("ELECTRO VARIETY",600,65);x.fillStyle="#6b7280";x.font="18px Arial";x.fillText("LA COMODIDAD PARA TU HOGAR",600,94);const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{const s=Math.min(1080/im.naturalWidth,980/im.naturalHeight),w=im.naturalWidth*s,h=im.naturalHeight*s;x.drawImage(im,(1200-w)/2,120,w,h);x.fillStyle="#f3f4f6";x.beginPath();x.roundRect(60,1130,1080,320,30);x.fill();x.textAlign="left";x.fillStyle="#111827";x.font="900 30px Arial";x.fillText("FINANCIACIÓN",100,1190);x.fillStyle="#2563eb";x.font="900 27px Arial";x.fillText("QUINCENAL",100,1260);x.fillStyle="#111827";x.fillText(`${p.q_price} × ${p.q_count} cuotas`,370,1260);x.fillStyle="#2563eb";x.fillText("MENSUAL",100,1330);x.fillStyle="#111827";x.fillText(`${p.m_price} × ${p.m_count} cuotas`,370,1330);x.textAlign="center";x.fillStyle="#25D366";x.beginPath();x.roundRect(250,1380,700,65,32);x.fill();x.fillStyle="#fff";x.font="900 25px Arial";x.fillText("COMPARTIR POR WHATSAPP",600,1422);c.toBlob(resolve,"image/jpeg",.92)};im.src=p.image_url})}
+start();
+</script></body></html>
