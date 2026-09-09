@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Electro Variety — Catálogo</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#e9ecef;font-family:Arial,sans-serif;color:#111827}
+header{background:#111827;color:#fff;padding:13px 15px;position:sticky;top:0;z-index:20}.head{max-width:760px;margin:auto;display:flex;align-items:center;gap:8px}.brand{font-weight:900;flex:1}.counter{font-size:13px;white-space:nowrap}.logout{border:0;border-radius:8px;padding:7px 10px;font-weight:900;background:#fff;color:#111827}
+.tools{max-width:760px;margin:9px auto 0;display:flex;gap:7px}.tools input,.tools select{min-width:0;flex:1;padding:10px;border:0;border-radius:9px;font-size:14px}.tools select{max-width:210px}
+main{max-width:760px;margin:auto;background:#fff;min-height:calc(100vh - 100px);padding:18px}.msg{text-align:center;padding:45px 10px;color:#6b7280}
+.loginbox{max-width:420px;margin:50px auto;background:#fff;border-radius:15px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.06)}.loginbox h2{margin-top:0;text-align:center}.loginbox label{display:block;font-size:12px;font-weight:900;margin-top:10px}.loginbox input{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:9px;margin-top:5px}.loginbtn{width:100%;margin-top:15px;border:0;border-radius:9px;background:#2563eb;color:#fff;padding:13px;font-weight:900;font-size:15px}.loginmsg{text-align:center;color:#6b7280;font-size:13px;margin-top:10px}
+.brand2{text-align:center;font-size:25px;font-weight:900}.tag{text-align:center;color:#6b7280;font-size:11px;margin:3px 0 15px}.category{width:max-content;margin:auto;background:#111827;color:#fff;border-radius:20px;padding:7px 17px;font-size:12px;font-weight:900}
+.catalog-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:12px}.catalog-card{border:1px solid #e5e7eb;border-radius:12px;padding:10px;background:#fff;display:flex;flex-direction:column}.catalog-card .img{aspect-ratio:1/1;object-fit:cover}.catalog-card .prodtitle{font-size:18px;margin:10px 0 7px}.catalog-card .stock{margin:0;font-weight:900;text-align:center;padding:10px 8px;border-radius:999px;background:#dcfce7;color:#166534;display:flex;align-items:center;justify-content:center;line-height:1.15;flex:0 0 38%;min-width:0}.catalog-card .stock.out{background:#fee2e2;color:#991b1b}.finance{margin-top:auto}.catalog-card .row{font-size:14px;padding:3px 0}.bottom-actions{display:flex;gap:8px;align-items:stretch;margin-top:10px}.catalog-card .share{padding:10px;font-size:13px;margin:0;flex:1;min-width:0}.pagination{display:flex;gap:8px;align-items:center;justify-content:center;margin:18px 0 5px;flex-wrap:wrap}.pagination button{padding:10px 14px;border:0;border-radius:9px;background:#111827;color:#fff;font-weight:900}.pagination button:disabled{opacity:.3}.pageinfo{font-size:13px;font-weight:900;color:#374151}.catalog-count{font-size:12px;color:#6b7280;margin-top:8px;text-align:center}@media(max-width:600px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.catalog-card .stock{font-size:13px}.catalog-card .share{font-size:12px;padding:10px 7px}.bottom-actions{gap:6px}}.prodtitle{text-align:left;color:#111827;font-size:27px;line-height:1.2;font-weight:900;margin:16px 0 10px}.img{width:100%;display:block;border-radius:10px}.finance{padding:6px 4px 2px;margin-top:15px}.row{padding:5px 0;font-size:20px;font-weight:700}.value{font-weight:900}.share{width:100%;border:0;border-radius:999px;background:#25D366;color:#fff;padding:15px;font-size:16px;font-weight:900;margin-top:15px}.nav{display:flex;gap:8px;margin-top:10px}.nav button{flex:1;padding:11px;border:0;border-radius:9px;background:#111827;color:#fff;font-weight:900}.nav button:disabled{opacity:.3}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+</head>
+<body>
+<header>
+  <div class="head">
+    <div class="brand">ELECTRO VARIETY · CATÁLOGO</div>
+    <div id="counter" class="counter">—</div>
+    <button id="catLogout" class="logout" type="button" style="display:none">Salir</button>
+  </div>
+  <div id="tools" class="tools" style="display:none">
+    <input id="search" type="search" placeholder="🔎 Buscar producto" autocomplete="off">
+    <select id="category"><option value="">Todas las categorías</option></select>
+  </div>
+</header>
+<main id="app"><div class="msg">Cargando…</div></main>
+<script>
+"use strict";
+let db;
+let allProducts=[];
+let filteredProducts=[];
+let currentPage=1;
+const PRODUCTS_PER_PAGE=20;
+let handlingAuth=false;
+let deviceHeartbeat=null;
+const DEVICE_STORAGE_KEY="electro-variety-seller-device-id";
+
+function getDeviceId(){
+  let id=localStorage.getItem(DEVICE_STORAGE_KEY);
+  if(!id){ id=crypto.randomUUID ? crypto.randomUUID() : ("dev-"+Date.now()+"-"+Math.random().toString(36).slice(2)); localStorage.setItem(DEVICE_STORAGE_KEY,id); }
+  return id;
+}
+function getDeviceLabel(){
+  const ua=navigator.userAgent||"";
+  const mobile=/Android|iPhone|iPad|Mobile/i.test(ua);
+  return (mobile?"Móvil":"Computadora")+" · "+(navigator.platform||"Navegador");
+}
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
+const normalizePhone=v=>String(v??"").replace(/\D/g,"");
+const authEmailFromPhone=phone=>normalizePhone(phone)+"@seller.electrovariety.local";
+const money=v=>{
+  const s=String(v??"").trim();
+  const n=Number(s.replace(/\$/g,"").replace(/\./g,"").replace(",","."));
+  return Number.isFinite(n)?"$"+Math.round(n).toLocaleString("es-AR"):esc(v);
+};
+const productTitle=p=>p.subtitle?`${p.name} (${p.subtitle})`:p.name;
+
+function showLogin(message=""){
+  $("tools").style.display="none";
+  $("counter").textContent="—";
+  $("catLogout").style.display="none";
+  $("app").innerHTML=`<div class="loginbox">
+    <h2>🔐 Acceso al catálogo</h2>
+    <label>Número de WhatsApp / celular</label>
+    <input id="loginPhone" type="tel" inputmode="numeric" autocomplete="username" placeholder="2224534328">
+    <label>Contraseña</label>
+    <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Tu contraseña">
+    <button id="loginButton" class="loginbtn" type="button">Ingresar</button>
+    <div class="loginmsg">La sesión queda guardada en este dispositivo hasta que toques <b>Salir</b>.</div>
+    <div id="loginMsg" class="loginmsg">${esc(message)}</div>
+  </div>`;
+  $("loginButton").addEventListener("click",sellerLogin);
+  $("loginPassword").addEventListener("keydown",e=>{if(e.key==="Enter")sellerLogin()});
+}
+
+async function sellerLogin(){
+  const msg=$("loginMsg");
+  const phone=normalizePhone($("loginPhone").value);
+  const password=$("loginPassword").value;
+  if(!phone||!password){msg.textContent="Ingresá tu número y contraseña.";return}
+  if(phone.length<8){msg.textContent="Ingresá un número de celular válido.";return}
+  $("loginButton").disabled=true;
+  msg.textContent="Ingresando…";
+  try{
+    const {data,error}=await db.auth.signInWithPassword({email:authEmailFromPhone(phone),password});
+    if(error||!data?.session){msg.textContent="Número o contraseña incorrectos.";return}
+    await handleSession(data.session);
+  }catch(e){
+    msg.textContent="No se pudo iniciar sesión. Intentá nuevamente.";
+  }finally{
+    if($("loginButton")) $("loginButton").disabled=false;
+  }
+}
+
+async function registerSellerDevice(session){
+  if(!session?.access_token) return {ok:false,message:"Sesión inválida."};
+  const {data,error}=await db.functions.invoke("register-seller-device",{
+    body:{device_id:getDeviceId(),device_label:getDeviceLabel(),session_id:session.session_id || null}
+  });
+  if(error){
+    let message=error.message||"No se pudo verificar el dispositivo.";
+    try{ if(error.context){ const body=await error.context.json(); if(body?.error) message=body.error; } }catch(_){}
+    return {ok:false,message};
+  }
+  if(data?.status==="approved") return {ok:true};
+  if(data?.status==="pending") return {ok:false,pending:true,message:"Este dispositivo es nuevo. Se envió una solicitud al administrador. Volvé a intentar cuando sea aprobada."};
+  return {ok:false,message:data?.message||"Dispositivo no autorizado."};
+}
+
+async function checkSellerDevice(session){
+  if(!session) return false;
+  const result=await registerSellerDevice(session);
+  if(result.ok) return true;
+  await db.auth.signOut({scope:"local"});
+  showLogin(result.pending ? "⏳ Este dispositivo está pendiente de aprobación del administrador." : "🔒 Este dispositivo ya no está autorizado.");
+  return false;
+}
+
+function startDeviceHeartbeat(){
+  if(deviceHeartbeat) clearInterval(deviceHeartbeat);
+  deviceHeartbeat=setInterval(async()=>{
+    try{
+      const {data}=await db.auth.getSession();
+      if(!data?.session) return;
+      await checkSellerDevice(data.session);
+    }catch(e){ console.error("Device heartbeat",e); }
+  },60000);
+}
+
+async function handleSession(session){
+  if(!session||handlingAuth)return;
+  handlingAuth=true;
+  try{
+    const {data:seller,error:sellerError}=await db.from("seller_profiles")
+      .select("user_id,name,phone,active").eq("user_id",session.user.id).maybeSingle();
+    if(sellerError){showLogin("No se pudo verificar tu cuenta. Intentá nuevamente.");return}
+    if(seller){
+      if(!seller.active){
+        await db.auth.signOut({scope:"local"});
+        showLogin("Tu cuenta está desactivada. Contactá al administrador.");
+        return;
+      }
+      const device=await registerSellerDevice(session);
+      if(!device.ok){
+        await db.auth.signOut({scope:"local"});
+        showLogin(device.pending ? "⏳ Dispositivo nuevo: solicitud enviada al administrador." : (device.message||"🔒 Dispositivo no autorizado."));
+        return;
+      }
+      // Mantener un solo dispositivo/sesión efectiva para el vendedor.
+      await db.auth.signOut({scope:"others"});
+      startDeviceHeartbeat();
+      await startCatalog();
+      return;
+    }
+    const {data:admin}=await db.from("admin_profiles")
+      .select("user_id,role").eq("user_id",session.user.id).eq("role","admin").maybeSingle();
+    if(admin){await startCatalog();return;}
+    await db.auth.signOut();
+    showLogin("Esta cuenta no tiene acceso al catálogo.");
+  }finally{handlingAuth=false}
+}
+
+async function startCatalog(){
+  $("tools").style.display="flex";
+  $("catLogout").style.display="block";
+  $("app").innerHTML='<div class="msg">Cargando catálogo…</div>';
+  const {data,error}=await db.from("products").select("*").eq("active",true);
+  if(error){$("app").innerHTML='<div class="msg">No se pudo cargar el catálogo.<br>Revisá tu conexión e intentá nuevamente.</div>';return}
+  allProducts=Array.isArray(data)?data:[];
+  // Orden REAL del catálogo: categoría A-Z y, dentro de cada categoría, producto A-Z.
+  // Se eliminan caracteres invisibles de WhatsApp y signos iniciales que podrían alterar el orden.
+  const sortKey=value=>String(value??"")
+    .replace(/[\u200B-\u200D\u200E\u200F\u202A-\u202E\u2060\u2066-\u2069\uFEFF]/g,"")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .trim().replace(/^[^\p{L}\p{N}]+/u,"").toLocaleLowerCase("es");
+  const collator=new Intl.Collator("es",{numeric:true,sensitivity:"base",ignorePunctuation:true});
+  allProducts.sort((a,b)=>{
+    const ca=sortKey(a.category||"Sin categoría");
+    const cb=sortKey(b.category||"Sin categoría");
+    const byCategory=collator.compare(ca,cb);
+    if(byCategory!==0)return byCategory;
+    const byName=collator.compare(sortKey(a.name),sortKey(b.name));
+    if(byName!==0)return byName;
+    return Number(a.id||0)-Number(b.id||0);
+  });
+  fillCategories();
+  applyFilters();
+}
+
+function fillCategories(){
+  const cats=[...new Set(allProducts.map(p=>String(p.category??"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"));
+  $("category").innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+}
+
+function applyFilters(){
+  const q=String($("search")?.value??"").trim().toLocaleLowerCase("es");
+  const cat=String($("category")?.value??"");
+  filteredProducts=allProducts.filter(p=>{
+    const hay=[p.name,p.subtitle,p.category].filter(Boolean).join(" ").toLocaleLowerCase("es");
+    return (!q||hay.includes(q))&&(!cat||String(p.category??"")===cat);
+  });
+  currentPage=1;
+  render();
+}
+
+function render(){
+  const total=filteredProducts.length;
+  if(!total){
+    $("counter").textContent="0 / 0";
+    $("app").innerHTML='<div class="msg">No se encontraron productos.</div>';
+    return;
+  }
+  const totalPages=Math.ceil(total/PRODUCTS_PER_PAGE);
+  currentPage=Math.max(1,Math.min(currentPage,totalPages));
+  const start=(currentPage-1)*PRODUCTS_PER_PAGE;
+  const pageProducts=filteredProducts.slice(start,start+PRODUCTS_PER_PAGE);
+  $("counter").textContent=`${start+1}-${start+pageProducts.length} / ${total}`;
+  $("app").innerHTML=`<div class="brand2">ELECTRO VARIETY</div>
+    <div class="tag">LA COMODIDAD PARA TU HOGAR</div>
+    <div class="catalog-count">Mostrando ${start+1}–${start+pageProducts.length} de ${total} productos</div>
+    <div class="catalog-grid">${pageProducts.map((p,i)=>catalogCard(p,start+i)).join("")}</div>
+    <div class="pagination">
+      <button id="prevPageButton" type="button" ${currentPage===1?"disabled":""}>← Anterior</button>
+      <span class="pageinfo">Página ${currentPage} de ${totalPages}</span>
+      <button id="nextPageButton" type="button" ${currentPage===totalPages?"disabled":""}>Siguiente →</button>
+    </div>`;
+  document.querySelectorAll("[data-share-index]").forEach(button=>{
+    button.addEventListener("click",()=>shareProduct(Number(button.dataset.shareIndex)));
+  });
+  $("prevPageButton").addEventListener("click",()=>changePage(-1));
+  $("nextPageButton").addEventListener("click",()=>changePage(1));
+}
+
+function catalogCard(p,index){
+  return `<article class="catalog-card">
+    <div class="category">${esc(p.category||"Producto")}</div>
+    <h2 class="prodtitle">${esc(productTitle(p))}</h2>
+    <img class="img" src="${esc(p.image_url)}" alt="${esc(productTitle(p))}" loading="lazy">
+    <div class="finance">
+      <div class="row">${esc(p.q_count)} cuotas quincenales de <span class="value">${money(p.q_price)}</span></div>
+      <div class="row">${esc(p.m_count)} cuotas mensuales de <span class="value">${money(p.m_price)}</span></div>
+    </div>
+    <div class="bottom-actions">
+      <div class="stock ${Number(p.stock || 0) <= 0 ? "out" : ""}">${Number(p.stock || 0) > 0 ? `📦 Stock: ${Math.floor(Number(p.stock))}` : "⛔ Sin stock"}</div>
+      <button class="share" data-share-index="${index}" type="button">🟢 COMPARTIR POR WHATSAPP</button>
+    </div>
+  </article>`;
+}
+
+function changePage(delta){
+  const totalPages=Math.max(1,Math.ceil(filteredProducts.length/PRODUCTS_PER_PAGE));
+  const next=currentPage+delta;
+  if(next<1||next>totalPages)return;
+  currentPage=next;
+  render();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+async function shareProduct(index){
+  const p=filteredProducts[index];
+  if(!p)return;
+  const text=`${productTitle(p)}\n\n${p.q_count} cuotas quincenales de ${money(p.q_price)}\n${p.m_count} cuotas mensuales de ${money(p.m_price)}`;
+  const imageUrl=String(p.image_url||"");
+  const shareText=imageUrl ? `${text}\n\n${imageUrl}` : text;
+
+  if(!navigator.share){
+    try{
+      if(navigator.clipboard?.writeText) await navigator.clipboard.writeText(shareText);
+      alert("Tu navegador no permite compartir directamente. La ficha quedó copiada para pegarla en WhatsApp.");
+    }catch(e){
+      alert("No se pudo preparar la ficha para compartir.");
+    }
+    return;
+  }
+
+  // Primer intento: compartir la imagen original como archivo.
+  // Si el navegador bloquea la descarga de la imagen por CORS, no mostramos error:
+  // pasamos automáticamente a compartir el enlace de la imagen junto con el texto.
+  if(imageUrl){
+    try{
+      const res=await fetch(imageUrl,{mode:"cors",cache:"no-store"});
+      if(res.ok){
+        const blob=await res.blob();
+        const mime=blob.type&&blob.type.startsWith("image/")?blob.type:"image/jpeg";
+        const ext=mime.split("/")[1]||"jpeg";
+        const safe=(p.name||"producto").replace(/[^a-z0-9]+/gi,"-").replace(/^-|-$/g,"").toLowerCase()||"producto";
+        const file=new File([blob],safe+"."+ext,{type:mime});
+        if(!navigator.canShare || navigator.canShare({files:[file]})){
+          try{
+            await navigator.share({title:p.name||"Producto",text,files:[file]});
+            return;
+          }catch(e){
+            if(e?.name==="AbortError")return;
+          }
+        }
+      }
+    }catch(e){
+      // Fallback below.
+    }
+  }
+
+  // Fallback compatible con navegadores/Android que no permiten adjuntar el archivo.
+  try{
+    await navigator.share({title:p.name||"Producto",text:shareText});
+    return;
+  }catch(e){
+    if(e?.name==="AbortError")return;
+  }
+
+  try{
+    if(navigator.clipboard?.writeText) await navigator.clipboard.writeText(shareText);
+    alert("No se pudo abrir el selector de WhatsApp. La ficha quedó copiada para pegarla manualmente.");
+  }catch(e){
+    alert("No se pudo preparar la ficha para compartir.");
+  }
+}
+
+$("search").addEventListener("input",applyFilters);
+$("category").addEventListener("change",applyFilters);
+$("catLogout").addEventListener("click",async()=>{
+  if(deviceHeartbeat) clearInterval(deviceHeartbeat);
+  await db.auth.signOut({scope:"local"});
+  showLogin("Sesión cerrada.");
+});
+
+db=supabase.createClient(EV_CONFIG.SUPABASE_URL,EV_CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,storageKey:"electro-variety-auth"}});
+
+db.auth.onAuthStateChange((event,session)=>{
+  if(event==="SIGNED_OUT"){ if(deviceHeartbeat) clearInterval(deviceHeartbeat); showLogin(); }
+  else if(event==="SIGNED_IN"||event==="INITIAL_SESSION"||event==="TOKEN_REFRESHED"){
+    if(session)setTimeout(()=>handleSession(session),0);
+  }
+});
+
+(async function boot(){
+  try{
+    const {data,error}=await db.auth.getSession();
+    if(error){showLogin("No se pudo recuperar la sesión. Iniciá sesión nuevamente.");return}
+    if(data?.session)await handleSession(data.session);
+    else showLogin();
+  }catch(e){showLogin("No se pudo recuperar la sesión. Iniciá sesión nuevamente.");}
+})();
+</script>
+</body>
+</html>
