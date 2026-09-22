@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>Electro Variety · Catálogo</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f5f6f8;color:#111827;font-family:Arial,sans-serif}
+header{background:#111827;color:#fff;padding:18px 16px;text-align:center;position:sticky;top:0;z-index:20;box-shadow:0 3px 15px rgba(0,0,0,.15)}
+.brand{font-size:25px;font-weight:1000;letter-spacing:.4px}
+.subbrand{font-size:11px;opacity:.75;margin-top:3px}
+.wrap{max-width:1050px;margin:auto;padding:16px}
+.hero{background:#fff;border-radius:20px;padding:22px 16px;margin-bottom:16px;text-align:center}
+.hero h1{font-size:28px;line-height:1.05;margin:0 0 8px;font-weight:1000}
+.hero p{margin:0;color:#6b7280;font-size:14px}
+.section{background:#fff;border-radius:18px;padding:16px;margin-bottom:16px}
+.section h2{font-size:20px;margin:0 0 12px;font-weight:1000}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.horizontal{display:flex;gap:9px;overflow-x:auto;padding:3px 1px 8px;scrollbar-width:none}
+.horizontal::-webkit-scrollbar{display:none}
+.cat{white-space:nowrap;border:0;background:#eef0f3;color:#111827;border-radius:999px;padding:11px 17px;font-weight:900;font-size:13px;cursor:pointer}
+.cat.active{background:#111827;color:#fff}
+.media-wrap{position:relative;overflow:hidden;border-radius:15px;background:#111;aspect-ratio:16/9}
+.media-track{display:flex;width:100%;height:100%;transition:transform .35s ease}
+.media-slide{min-width:100%;height:100%;position:relative}
+.media-slide img,.media-slide video{width:100%;height:100%;object-fit:cover;display:block}
+.media-caption{position:absolute;left:0;right:0;bottom:0;padding:30px 14px 12px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.75));font-weight:900}
+.media-btn{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:22px;z-index:2}
+.media-btn.prev{left:9px}.media-btn.next{right:9px}
+.dots{text-align:center;margin-top:9px}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#d1d5db;margin:0 3px}
+.dot.active{background:#111827}
+.product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.product-card{border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+.product-card img{width:100%;aspect-ratio:1/1;object-fit:cover;background:#eef0f3}
+.product-body{padding:11px;display:flex;flex-direction:column;flex:1}
+.product-cat{font-size:10px;color:#6b7280;font-weight:900;text-transform:uppercase}
+.product-name{font-size:16px;font-weight:1000;margin:5px 0}
+.product-desc{font-size:12px;color:#6b7280;line-height:1.35;margin-bottom:10px}
+.wa{display:block;text-align:center;text-decoration:none;background:#16a34a;color:#fff;border-radius:999px;padding:10px 8px;font-size:12px;font-weight:1000;margin-top:auto}
+.empty{color:#6b7280;font-size:13px;text-align:center;padding:14px}
+.loading{padding:40px;text-align:center;color:#6b7280}
+#categoryResults{scroll-margin-top:80px}
+@media(min-width:700px){.product-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.hero h1{font-size:36px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">ELECTRO VARIETY</div>
+  <div class="subbrand">Todo lo que necesitás, en un solo lugar</div>
+</header>
+<main class="wrap">
+  <section class="hero">
+    <h1>¿QUÉ ESTÁS NECESITANDO?</h1>
+    <p>Elegí una categoría y descubrí nuestros productos.</p>
+  </section>
+
+  <section class="section">
+    <div class="section-title"><h2>🛍️ Categorías</h2></div>
+    <div id="categories" class="horizontal"></div>
+  </section>
+
+  <section class="section" id="mediaSection">
+    <div class="section-title"><h2>🚚 ENTREGAS REALES</h2></div>
+    <div id="mediaCarousel"><div class="loading">Cargando contenido…</div></div>
+  </section>
+
+  <section class="section" id="trendingSection">
+    <div class="section-title"><h2>🔥 PRODUCTOS EN TENDENCIA</h2></div>
+    <div id="trending" class="product-grid"></div>
+  </section>
+
+  <section class="section" id="newSection">
+    <div class="section-title"><h2>🆕 NUEVOS INGRESOS</h2></div>
+    <div id="newProducts" class="product-grid"></div>
+  </section>
+
+  <section class="section" id="comingSection">
+    <div class="section-title"><h2>🔜 PRÓXIMAMENTE</h2></div>
+    <div id="comingSoon" class="product-grid"></div>
+  </section>
+
+  <section class="section" id="categoryResults">
+    <div class="section-title"><h2 id="categoryTitle">🛒 TODOS LOS PRODUCTOS</h2></div>
+    <div id="products" class="product-grid"></div>
+  </section>
+</main>
+
+<script>
+"use strict";
+(() => {
+  const db=supabase.createClient(EV_CONFIG.SUPABASE_URL,EV_CONFIG.SUPABASE_ANON_KEY);
+  let products=[];
+  let features=[];
+  let selectedCategory="";
+  let media=[];
+  let mediaIndex=0;
+  let mediaTimer=null;
+
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+  const waText=p=>encodeURIComponent(`Hola, quiero consultar por este producto:\n\n${p.name}`);
+  const waLink=p=>`https://wa.me/?text=${waText(p)}`;
+
+  function sortProducts(list){
+    const collator=new Intl.Collator("es",{numeric:true,sensitivity:"base",ignorePunctuation:true});
+    return [...list].sort((a,b)=>collator.compare(String(a.name||""),String(b.name||"")));
+  }
+
+  function productCard(p){
+    const title=p.name||"Producto";
+    const desc=p.subtitle||"Consultanos por disponibilidad y características.";
+    return `<article class="product-card">
+      ${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(title)}" loading="lazy">`:"<div style=\"aspect-ratio:1/1;background:#eef0f3\"></div>"}
+      <div class="product-body">
+        <div class="product-cat">${esc(p.category||"Producto")}</div>
+        <div class="product-name">${esc(title)}</div>
+        <div class="product-desc">${esc(desc)}</div>
+        <a class="wa" href="${waLink(p)}" target="_blank" rel="noopener">💬 CONSULTAR POR WHATSAPP</a>
+      </div>
+    </article>`;
+  }
+
+  function renderGrid(id,list,emptyText){
+    const box=$(id);
+    const data=sortProducts(list);
+    box.innerHTML=data.length?data.map(productCard).join(""):`<div class="empty" style="grid-column:1/-1">${esc(emptyText)}</div>`;
+  }
+
+  function renderCategories(){
+    const cats=[...new Set(products.map(p=>String(p.category||"").trim()).filter(Boolean))]
+      .sort((a,b)=>a.localeCompare(b,"es"));
+    $("categories").innerHTML=
+      `<button class="cat ${selectedCategory===""?"active":""}" data-cat="">Todos</button>`+
+      cats.map(c=>`<button class="cat ${selectedCategory===c?"active":""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
+    document.querySelectorAll("[data-cat]").forEach(btn=>btn.addEventListener("click",()=>{
+      selectedCategory=btn.dataset.cat||"";
+      renderCategories();
+      renderCategoryProducts();
+      $("categoryResults").scrollIntoView({behavior:"smooth",block:"start"});
+    }));
+  }
+
+  function renderCategoryProducts(){
+    const list=selectedCategory?products.filter(p=>String(p.category||"").trim()===selectedCategory):products;
+    $("categoryTitle").textContent=selectedCategory?`🛒 ${selectedCategory.toUpperCase()}`:"🛒 TODOS LOS PRODUCTOS";
+    renderGrid("products",list,"No hay productos disponibles en esta categoría.");
+  }
+
+  function renderFeatured(){
+    const map=new Map(features.map(f=>[String(f.product_id),f]));
+    renderGrid("trending",products.filter(p=>map.get(String(p.id))?.trending),"Todavía no hay productos destacados en tendencia.");
+    renderGrid("newProducts",products.filter(p=>map.get(String(p.id))?.new_entry),"Todavía no hay nuevos ingresos publicados.");
+    renderGrid("comingSoon",products.filter(p=>map.get(String(p.id))?.coming_soon),"Próximamente vas a encontrar novedades acá.");
+  }
+
+  function stopVideos(){
+    document.querySelectorAll("#mediaCarousel video").forEach(v=>{try{v.pause()}catch(e){}});
+  }
+
+  function renderMedia(){
+    const box=$("mediaCarousel");
+    if(!media.length){box.innerHTML='<div class="empty">Todavía no hay entregas publicadas.</div>';return;}
+    box.innerHTML=`<div class="media-wrap">
+      <button class="media-btn prev" id="mediaPrev" aria-label="Anterior">‹</button>
+      <div class="media-track" id="mediaTrack">${media.map((m,i)=>`<div class="media-slide">
+        ${m.media_type==="video"
+          ?`<video src="${esc(m.media_url)}" controls playsinline preload="${i===0?"metadata":"none"}"></video>`
+          :`<img src="${esc(m.media_url)}" alt="${esc(m.title||"Entrega Electro Variety")}" loading="${i===0?"eager":"lazy"}">`}
+        ${m.title?`<div class="media-caption">${esc(m.title)}</div>`:""}
+      </div>`).join("")}</div>
+      <button class="media-btn next" id="mediaNext" aria-label="Siguiente">›</button>
+    </div>
+    <div class="dots">${media.map((_,i)=>`<span class="dot ${i===0?"active":""}" data-media-dot="${i}"></span>`).join("")}</div>`;
+    $("mediaPrev").onclick=()=>changeMedia(-1);
+    $("mediaNext").onclick=()=>changeMedia(1);
+    document.querySelectorAll("[data-media-dot]").forEach(d=>d.onclick=()=>goMedia(Number(d.dataset.mediaDot)));
+    if(media.length>1){
+      clearInterval(mediaTimer);
+      mediaTimer=setInterval(()=>changeMedia(1),6000);
+    }
+  }
+
+  function goMedia(i){
+    if(!media.length)return;
+    mediaIndex=(i+media.length)%media.length;
+    const track=$("mediaTrack"); if(track) track.style.transform=`translateX(-${mediaIndex*100}%)`;
+    document.querySelectorAll("[data-media-dot]").forEach((d,n)=>d.classList.toggle("active",n===mediaIndex));
+    stopVideos();
+  }
+  function changeMedia(delta){goMedia(mediaIndex+delta)}
+
+  async function load(){
+    try{
+      const [pRes,fRes,mRes]=await Promise.all([
+        db.from("products").select("id,name,subtitle,category,image_url,active").eq("active",true),
+        db.from("client_product_features").select("product_id,trending,new_entry,coming_soon"),
+        db.from("client_media").select("id,media_url,media_type,title,sort_order,created_at").eq("active",true).order("sort_order",{ascending:true})
+      ]);
+      if(pRes.error)throw pRes.error;
+      products=pRes.data||[];
+      features=fRes.error?[]:(fRes.data||[]);
+      media=mRes.error?[]:(mRes.data||[]);
+      renderCategories();
+      renderCategoryProducts();
+      renderFeatured();
+      renderMedia();
+    }catch(error){
+      console.error(error);
+      $("products").innerHTML=`<div class="empty" style="grid-column:1/-1">No se pudo cargar el catálogo. Intentá nuevamente en unos segundos.</div>`;
+    }
+  }
+  load();
+})();
+</script>
+</body>
+</html>
