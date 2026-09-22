@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Electro Variety — Catálogo</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#e9ecef;font-family:Arial,sans-serif;color:#111827}
+header{background:#111827;color:#fff;padding:13px 15px;position:sticky;top:0;z-index:20}.head{max-width:760px;margin:auto;display:flex;align-items:center;gap:8px}.brand{font-weight:900;flex:1}.counter{font-size:13px;white-space:nowrap}.logout{border:0;border-radius:8px;padding:7px 10px;font-weight:900;background:#fff;color:#111827}
+.tools{max-width:760px;margin:9px auto 0;display:flex;gap:7px}.tools input,.tools select{min-width:0;flex:1;padding:10px;border:0;border-radius:9px;font-size:14px}.tools select{max-width:210px}
+main{max-width:760px;margin:auto;background:#fff;min-height:calc(100vh - 100px);padding:18px}.msg{text-align:center;padding:45px 10px;color:#6b7280}
+.loginbox{max-width:420px;margin:50px auto;background:#fff;border-radius:15px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.06)}.loginbox h2{margin-top:0;text-align:center}.loginbox label{display:block;font-size:12px;font-weight:900;margin-top:10px}.loginbox input{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:9px;margin-top:5px}.loginbtn{width:100%;margin-top:15px;border:0;border-radius:9px;background:#2563eb;color:#fff;padding:13px;font-weight:900;font-size:15px}.loginmsg{text-align:center;color:#6b7280;font-size:13px;margin-top:10px}
+.brand2{text-align:center;font-size:25px;font-weight:900}.tag{text-align:center;color:#6b7280;font-size:11px;margin:3px 0 15px}.category{width:max-content;margin:auto;background:#111827;color:#fff;border-radius:20px;padding:7px 17px;font-size:12px;font-weight:900}
+.catalog-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:12px}.catalog-card{border:1px solid #e5e7eb;border-radius:12px;padding:10px;background:#fff;display:flex;flex-direction:column}.catalog-card .img{aspect-ratio:1/1;object-fit:cover}.catalog-card .prodtitle{font-size:18px;margin:10px 0 7px}.catalog-card .stock{margin:0;font-weight:900;text-align:center;padding:10px 8px;border-radius:999px;background:#dcfce7;color:#166534;display:flex;align-items:center;justify-content:center;line-height:1.15;flex:0 0 38%;min-width:0}.catalog-card .stock.out{background:#fee2e2;color:#991b1b}.finance{margin-top:auto}.catalog-card .row{font-size:14px;padding:3px 0}.bottom-actions{display:flex;gap:8px;align-items:stretch;margin-top:10px}.cart-add{border:0;border-radius:999px;background:#111827;color:#fff;padding:10px 12px;font-size:13px;font-weight:900;flex:1;min-width:0}.cart-add.selected{background:#16a34a}.cartbar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:50;width:min(92vw,520px);display:none;box-shadow:0 8px 30px rgba(0,0,0,.22)}.cartbar button{width:100%;border:0;border-radius:999px;background:#111827;color:#fff;padding:14px 18px;font-size:15px;font-weight:900}.cart-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:60;display:none;align-items:flex-end;justify-content:center}.cart-panel{width:min(100%,620px);max-height:82vh;background:#fff;border-radius:18px 18px 0 0;padding:18px;overflow:auto}.cart-head{display:flex;align-items:center;gap:10px}.cart-head h2{margin:0;flex:1}.cart-close{border:0;background:#e5e7eb;border-radius:50%;width:36px;height:36px;font-size:20px}.cart-list{margin:12px 0}.cart-item{display:flex;gap:10px;align-items:center;border-bottom:1px solid #e5e7eb;padding:10px 0}.cart-item img{width:58px;height:58px;object-fit:cover;border-radius:8px}.cart-item-info{flex:1;min-width:0}.cart-item-name{font-weight:900;font-size:14px}.cart-remove{border:0;background:#fee2e2;color:#991b1b;border-radius:8px;padding:8px;font-weight:900}.cart-send{width:100%;border:0;border-radius:999px;background:#25D366;color:#fff;padding:14px;font-size:16px;font-weight:900;margin-top:8px}.cart-clear{width:100%;border:0;border-radius:999px;background:#e5e7eb;color:#111827;padding:11px;font-weight:900;margin-top:8px}.cart-empty{text-align:center;color:#6b7280;padding:20px 5px}.cart-share-status{text-align:center;color:#374151;padding:16px 5px;font-size:15px;line-height:1.45}@media(max-width:600px){.cart-add{font-size:12px;padding:10px 7px}}.catalog-card .share{padding:10px;font-size:13px;margin:0;flex:1;min-width:0}.pagination{display:flex;gap:8px;align-items:center;justify-content:center;margin:18px 0 5px;flex-wrap:wrap}.pagination button{padding:10px 14px;border:0;border-radius:9px;background:#111827;color:#fff;font-weight:900}.pagination button:disabled{opacity:.3}.pageinfo{font-size:13px;font-weight:900;color:#374151}.catalog-count{font-size:12px;color:#6b7280;margin-top:8px;text-align:center}@media(max-width:600px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.catalog-card .stock{font-size:13px}.catalog-card .share{font-size:12px;padding:10px 7px}.bottom-actions{gap:6px}}.prodtitle{text-align:left;color:#111827;font-size:27px;line-height:1.2;font-weight:900;margin:16px 0 10px}.img{width:100%;display:block;border-radius:10px}.finance{padding:6px 4px 2px;margin-top:15px}.row{padding:5px 0;font-size:20px;font-weight:700}.value{font-weight:900}.share{width:100%;border:0;border-radius:999px;background:#25D366;color:#fff;padding:15px;font-size:16px;font-weight:900;margin-top:15px}.nav{display:flex;gap:8px;margin-top:10px}.nav button{flex:1;padding:11px;border:0;border-radius:9px;background:#111827;color:#fff;font-weight:900}.nav button:disabled{opacity:.3}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#0b0b0b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Electro Variety">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<style>
+#pwaInstallBtn{
+  display:none;
+  position:fixed;
+  left:16px;
+  right:16px;
+  bottom:16px;
+  z-index:99999;
+  border:0;
+  border-radius:16px;
+  padding:14px 18px;
+  font-size:16px;
+  font-weight:800;
+  color:#fff;
+  background:#16c65b;
+  box-shadow:0 8px 28px rgba(0,0,0,.28);
+}
+</style>
+
+</head>
+<body>
+<button id="pwaInstallBtn" type="button">📲 Instalar catálogo en este celular</button>
+<header>
+  <div class="head">
+    <div class="brand">ELECTRO VARIETY · CATÁLOGO</div>
+    <div id="counter" class="counter">—</div>
+    <button id="catLogout" class="logout" type="button" style="display:none">Salir</button>
+  </div>
+  <div id="tools" class="tools" style="display:none">
+    <input id="search" type="search" placeholder="🔎 Buscar producto" autocomplete="off">
+    <select id="category"><option value="">Todas las categorías</option></select>
+  </div>
+</header>
+<main id="app"><div class="msg">Cargando…</div></main>
+<div id="cartBar" class="cartbar"><button id="cartOpenButton" type="button">🛒 Ver carrito</button></div>
+<div id="cartShareModal" class="cart-modal" aria-hidden="true" style="z-index:70">
+  <div class="cart-panel" role="dialog" aria-modal="true" aria-labelledby="cartShareTitle">
+    <div class="cart-head"><h2 id="cartShareTitle">📤 Compartir carrito</h2><button id="cartShareClose" class="cart-close" type="button" aria-label="Cerrar">×</button></div>
+    <div id="cartShareStatus" class="cart-empty"></div>
+    <button id="cartShareNext" class="cart-send" type="button">🟢 Compartir siguiente</button>
+  </div>
+</div>
+<div id="cartModal" class="cart-modal" aria-hidden="true">
+  <div class="cart-panel" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
+    <div class="cart-head"><h2 id="cartTitle">🛒 Carrito</h2><button id="cartClose" class="cart-close" type="button" aria-label="Cerrar">×</button></div>
+    <div id="cartList" class="cart-list"></div>
+    <button id="cartSend" class="cart-send" type="button">🟢 ENVIAR CARRITO POR WHATSAPP</button>
+    <button id="cartClear" class="cart-clear" type="button">Vaciar carrito</button>
+  </div>
+</div>
+<script>
+"use strict";
+let db;
+let allProducts=[];
+let filteredProducts=[];
+let currentPage=1;
+const PRODUCTS_PER_PAGE=20;
+let handlingAuth=false;
+let deviceHeartbeat=null;
+let cartIds=new Set();
+const DEVICE_STORAGE_KEY="electro-variety-seller-device-id";
+
+function getDeviceId(){
+  let id=localStorage.getItem(DEVICE_STORAGE_KEY);
+  if(!id){ id=crypto.randomUUID ? crypto.randomUUID() : ("dev-"+Date.now()+"-"+Math.random().toString(36).slice(2)); localStorage.setItem(DEVICE_STORAGE_KEY,id); }
+  return id;
+}
+function getDeviceLabel(){
+  const ua=navigator.userAgent||"";
+  const mobile=/Android|iPhone|iPad|Mobile/i.test(ua);
+  return (mobile?"Móvil":"Computadora")+" · "+(navigator.platform||"Navegador");
+}
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
+const normalizePhone=v=>String(v??"").replace(/\D/g,"");
+const authEmailFromPhone=phone=>normalizePhone(phone)+"@seller.electrovariety.local";
+const money=v=>{
+  const s=String(v??"").trim();
+  const n=Number(s.replace(/\$/g,"").replace(/\./g,"").replace(",","."));
+  return Number.isFinite(n)?"$"+Math.round(n).toLocaleString("es-AR"):esc(v);
+};
+const productTitle=p=>p.subtitle?`${p.name} (${p.subtitle})`:p.name;
+
+function showLogin(message=""){
+  $("tools").style.display="none";
+  $("counter").textContent="—";
+  $("catLogout").style.display="none";
+  $("app").innerHTML=`<div class="loginbox">
+    <h2>🔐 Acceso al catálogo</h2>
+    <label>Número de WhatsApp / celular</label>
+    <input id="loginPhone" type="tel" inputmode="numeric" autocomplete="username" placeholder="2224534328">
+    <label>Contraseña</label>
+    <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Tu contraseña">
+    <button id="loginButton" class="loginbtn" type="button">Ingresar</button>
+    <div class="loginmsg">La sesión queda guardada en este dispositivo hasta que toques <b>Salir</b>.</div>
+    <div id="loginMsg" class="loginmsg">${esc(message)}</div>
+  </div>`;
+  $("loginButton").addEventListener("click",sellerLogin);
+  $("loginPassword").addEventListener("keydown",e=>{if(e.key==="Enter")sellerLogin()});
+}
+
+async function sellerLogin(){
+  const msg=$("loginMsg");
+  const phone=normalizePhone($("loginPhone").value);
+  const password=$("loginPassword").value;
+  if(!phone||!password){msg.textContent="Ingresá tu número y contraseña.";return}
+  if(phone.length<8){msg.textContent="Ingresá un número de celular válido.";return}
+  $("loginButton").disabled=true;
+  msg.textContent="Ingresando…";
+  try{
+    const {data,error}=await db.auth.signInWithPassword({email:authEmailFromPhone(phone),password});
+    if(error||!data?.session){msg.textContent="Número o contraseña incorrectos.";return}
+    await handleSession(data.session);
+  }catch(e){
+    msg.textContent="No se pudo iniciar sesión. Intentá nuevamente.";
+  }finally{
+    if($("loginButton")) $("loginButton").disabled=false;
+  }
+}
+
+async function registerSellerDevice(session){
+  if(!session?.access_token) return {ok:false,message:"Sesión inválida."};
+  const {data,error}=await db.functions.invoke("register-seller-device",{
+    body:{device_id:getDeviceId(),device_label:getDeviceLabel(),session_id:session.session_id || null}
+  });
+  if(error){
+    let message=error.message||"No se pudo verificar el dispositivo.";
+    try{ if(error.context){ const body=await error.context.json(); if(body?.error) message=body.error; } }catch(_){}
+    return {ok:false,message};
+  }
+  if(data?.status==="approved") return {ok:true};
+  if(data?.status==="pending") return {ok:false,pending:true,message:"Este dispositivo es nuevo. Se envió una solicitud al administrador. Volvé a intentar cuando sea aprobada."};
+  return {ok:false,message:data?.message||"Dispositivo no autorizado."};
+}
+
+async function checkSellerDevice(session){
+  if(!session) return false;
+  const result=await registerSellerDevice(session);
+  if(result.ok) return true;
+  await db.auth.signOut({scope:"local"});
+  showLogin(result.pending ? "⏳ Este dispositivo está pendiente de aprobación del administrador." : "🔒 Este dispositivo ya no está autorizado.");
+  return false;
+}
+
+function startDeviceHeartbeat(){
+  if(deviceHeartbeat) clearInterval(deviceHeartbeat);
+  deviceHeartbeat=setInterval(async()=>{
+    try{
+      const {data}=await db.auth.getSession();
+      if(!data?.session) return;
+      await checkSellerDevice(data.session);
+    }catch(e){ console.error("Device heartbeat",e); }
+  },60000);
+}
+
+async function handleSession(session){
+  if(!session||handlingAuth)return;
+  handlingAuth=true;
+  try{
+    const {data:seller,error:sellerError}=await db.from("seller_profiles")
+      .select("user_id,name,phone,active").eq("user_id",session.user.id).maybeSingle();
+    if(sellerError){showLogin("No se pudo verificar tu cuenta. Intentá nuevamente.");return}
+    if(seller){
+      if(!seller.active){
+        await db.auth.signOut({scope:"local"});
+        showLogin("Tu cuenta está desactivada. Contactá al administrador.");
+        return;
+      }
+      const device=await registerSellerDevice(session);
+      if(!device.ok){
+        await db.auth.signOut({scope:"local"});
+        showLogin(device.pending ? "⏳ Dispositivo nuevo: solicitud enviada al administrador." : (device.message||"🔒 Dispositivo no autorizado."));
+        return;
+      }
+      // Mantener un solo dispositivo/sesión efectiva para el vendedor.
+      await db.auth.signOut({scope:"others"});
+      startDeviceHeartbeat();
+      await startCatalog();
+      return;
+    }
+    const {data:admin}=await db.from("admin_profiles")
+      .select("user_id,role").eq("user_id",session.user.id).eq("role","admin").maybeSingle();
+    if(admin){await startCatalog();return;}
+    await db.auth.signOut();
+    showLogin("Esta cuenta no tiene acceso al catálogo.");
+  }finally{handlingAuth=false}
+}
+
+async function startCatalog(){
+  $("tools").style.display="flex";
+  $("catLogout").style.display="block";
+  $("app").innerHTML='<div class="msg">Cargando catálogo…</div>';
+  const {data,error}=await db.from("products").select("*").eq("active",true);
+  if(error){$("app").innerHTML='<div class="msg">No se pudo cargar el catálogo.<br>Revisá tu conexión e intentá nuevamente.</div>';return}
+  allProducts=Array.isArray(data)?data:[];
+  // Orden REAL del catálogo: categoría A-Z y, dentro de cada categoría, producto A-Z.
+  // Se eliminan caracteres invisibles de WhatsApp y signos iniciales que podrían alterar el orden.
+  const sortKey=value=>String(value??"")
+    .replace(/[\u200B-\u200D\u200E\u200F\u202A-\u202E\u2060\u2066-\u2069\uFEFF]/g,"")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .trim().replace(/^[^\p{L}\p{N}]+/u,"").toLocaleLowerCase("es");
+  const collator=new Intl.Collator("es",{numeric:true,sensitivity:"base",ignorePunctuation:true});
+  allProducts.sort((a,b)=>{
+    const ca=sortKey(a.category||"Sin categoría");
+    const cb=sortKey(b.category||"Sin categoría");
+    const byCategory=collator.compare(ca,cb);
+    if(byCategory!==0)return byCategory;
+    const byName=collator.compare(sortKey(a.name),sortKey(b.name));
+    if(byName!==0)return byName;
+    return Number(a.id||0)-Number(b.id||0);
+  });
+  fillCategories();
+  applyFilters();
+}
+
+function fillCategories(){
+  const cats=[...new Set(allProducts.map(p=>String(p.category??"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"));
+  $("category").innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+}
+
+function applyFilters(){
+  const q=String($("search")?.value??"").trim().toLocaleLowerCase("es");
+  const cat=String($("category")?.value??"");
+  filteredProducts=allProducts.filter(p=>{
+    const hay=[p.name,p.subtitle,p.category].filter(Boolean).join(" ").toLocaleLowerCase("es");
+    return (!q||hay.includes(q))&&(!cat||String(p.category??"")===cat);
+  });
+  currentPage=1;
+  render();
+}
+
+function render(){
+  const total=filteredProducts.length;
+  if(!total){
+    $("counter").textContent="0 / 0";
+    $("app").innerHTML='<div class="msg">No se encontraron productos.</div>';
+    return;
+  }
+  const totalPages=Math.ceil(total/PRODUCTS_PER_PAGE);
+  currentPage=Math.max(1,Math.min(currentPage,totalPages));
+  const start=(currentPage-1)*PRODUCTS_PER_PAGE;
+  const pageProducts=filteredProducts.slice(start,start+PRODUCTS_PER_PAGE);
+  $("counter").textContent=`${start+1}-${start+pageProducts.length} / ${total}`;
+  $("app").innerHTML=`<div class="brand2">ELECTRO VARIETY</div>
+    <div class="tag">LA COMODIDAD PARA TU HOGAR</div>
+    <div class="catalog-count">Mostrando ${start+1}–${start+pageProducts.length} de ${total} productos</div>
+    <div class="catalog-grid">${pageProducts.map((p,i)=>catalogCard(p,start+i)).join("")}</div>
+    <div class="pagination">
+      <button id="prevPageButton" type="button" ${currentPage===1?"disabled":""}>← Anterior</button>
+      <span class="pageinfo">Página ${currentPage} de ${totalPages}</span>
+      <button id="nextPageButton" type="button" ${currentPage===totalPages?"disabled":""}>Siguiente →</button>
+    </div>`;
+  document.querySelectorAll("[data-share-index]").forEach(button=>{
+    button.addEventListener("click",()=>shareProduct(Number(button.dataset.shareIndex)));
+  });
+  document.querySelectorAll("[data-cart-index]").forEach(button=>{
+    button.addEventListener("click",()=>toggleCartProduct(Number(button.dataset.cartIndex)));
+  });
+  updateCartButtons();
+  $("prevPageButton").addEventListener("click",()=>changePage(-1));
+  $("nextPageButton").addEventListener("click",()=>changePage(1));
+}
+
+function catalogCard(p,index){
+  return `<article class="catalog-card">
+    <div class="category">${esc(p.category||"Producto")}</div>
+    <h2 class="prodtitle">${esc(productTitle(p))}</h2>
+    <img class="img" src="${esc(p.image_url)}" alt="${esc(productTitle(p))}" loading="lazy">
+    <div class="finance">
+      <div class="row">${esc(p.q_count)} cuotas quincenales de <span class="value">${money(p.q_price)}</span></div>
+      <div class="row">${esc(p.m_count)} cuotas mensuales de <span class="value">${money(p.m_price)}</span></div>
+    </div>
+    <div class="bottom-actions">
+      <div class="stock ${Number(p.stock) === -1 ? "" : (Number(p.stock || 0) <= 0 ? "out" : "")}">${Number(p.stock) === -1 ? "📦 Hay stock" : (Number(p.stock || 0) > 0 ? `📦 Stock: ${Math.floor(Number(p.stock))}` : "⛔ Sin stock")}</div>
+    </div>
+    <div class="bottom-actions">
+      <button class="cart-add ${cartIds.has(String(p.id))?"selected":""}" data-cart-index="${index}" type="button">${cartIds.has(String(p.id))?"✓ EN CARRITO":"🛒 AGREGAR"}</button>
+      <button class="share" data-share-index="${index}" type="button">🟢 COMPARTIR</button>
+    </div>
+  </article>`;
+}
+
+function changePage(delta){
+  const totalPages=Math.max(1,Math.ceil(filteredProducts.length/PRODUCTS_PER_PAGE));
+  const next=currentPage+delta;
+  if(next<1||next>totalPages)return;
+  currentPage=next;
+  render();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function cartProducts(){
+  const map=new Map(allProducts.map(p=>[String(p.id),p]));
+  return [...cartIds].map(id=>map.get(id)).filter(Boolean);
+}
+
+function updateCartButtons(){
+  document.querySelectorAll("[data-cart-index]").forEach(button=>{
+    const p=filteredProducts[Number(button.dataset.cartIndex)];
+    if(!p)return;
+    const selected=cartIds.has(String(p.id));
+    button.classList.toggle("selected",selected);
+    button.textContent=selected?"✓ EN CARRITO":"🛒 AGREGAR";
+  });
+  const count=cartIds.size;
+  $("cartBar").style.display=count?"block":"none";
+  $("cartOpenButton").textContent=`🛒 Ver carrito (${count})`;
+}
+
+function toggleCartProduct(index){
+  const p=filteredProducts[index];
+  if(!p)return;
+  const id=String(p.id);
+  if(cartIds.has(id))cartIds.delete(id);
+  else cartIds.add(id);
+  updateCartButtons();
+  renderCart();
+}
+
+function renderCart(){
+  const products=cartProducts();
+  if(!products.length){
+    $("cartList").innerHTML='<div class="cart-empty">Tu carrito está vacío.<br>Agregá los productos que quieras enviar.</div>';
+    $("cartSend").disabled=true;
+    return;
+  }
+  $("cartSend").disabled=false;
+  $("cartList").innerHTML=products.map(p=>`<div class="cart-item">
+    <img src="${esc(p.image_url)}" alt="${esc(productTitle(p))}">
+    <div class="cart-item-info"><div class="cart-item-name">${esc(productTitle(p))}</div><div>${esc(p.q_count)} cuotas quincenales de ${money(p.q_price)}</div><div>${esc(p.m_count)} cuotas mensuales de ${money(p.m_price)}</div></div>
+    <button class="cart-remove" type="button" data-remove-cart="${esc(p.id)}">Quitar</button>
+  </div>`).join("");
+  document.querySelectorAll("[data-remove-cart]").forEach(btn=>btn.addEventListener("click",()=>{cartIds.delete(String(btn.dataset.removeCart));updateCartButtons();renderCart();}));
+}
+
+function openCart(){
+  renderCart();
+  $("cartModal").style.display="flex";
+  $("cartModal").setAttribute("aria-hidden","false");
+}
+
+function closeCart(){
+  $("cartModal").style.display="none";
+  $("cartModal").setAttribute("aria-hidden","true");
+}
+
+let cartShareIndex=0;
+let cartShareProducts=[];
+let cartShareBusy=false;
+
+function openCartShareModal(){
+  $("cartShareModal").style.display="flex";
+  $("cartShareModal").setAttribute("aria-hidden","false");
+}
+
+function closeCartShareModal(){
+  $("cartShareModal").style.display="none";
+  $("cartShareModal").setAttribute("aria-hidden","true");
+}
+
+function updateCartShareUI(message){
+  const total=cartShareProducts.length;
+  const done=cartShareIndex;
+  const remaining=total-done;
+  if(remaining<=0){
+    $("cartShareStatus").innerHTML=`<b>✅ Todos los productos fueron compartidos.</b><br><br>${done} de ${total} productos enviados.`;
+    $("cartShareNext").textContent="Cerrar";
+    $("cartShareNext").disabled=false;
+    return;
+  }
+  const p=cartShareProducts[cartShareIndex];
+  $("cartShareStatus").innerHTML=`<b>${esc(message||"Listo")}</b><br><br>Producto <b>${cartShareIndex+1} de ${total}</b><br>${esc(productTitle(p))}<br><br>Al tocar el botón se abrirá nuevamente el selector de Android para compartir este producto con su imagen.`;
+  $("cartShareNext").textContent=`🟢 Compartir producto ${cartShareIndex+1} de ${total}`;
+  $("cartShareNext").disabled=false;
+}
+
+async function shareNextCartProduct(){
+  if(cartShareBusy)return;
+  if(cartShareIndex>=cartShareProducts.length){
+    closeCartShareModal();
+    alert('✅ Todos los productos del carrito fueron compartidos.');
+    return;
+  }
+
+  const p=cartShareProducts[cartShareIndex];
+  const position=cartShareIndex+1;
+  const text=`${productTitle(p)}\n\n${p.q_count} cuotas quincenales de ${money(p.q_price)}\n${p.m_count} cuotas mensuales de ${money(p.m_price)}`;
+  const imageUrl=String(p.image_url||'').trim();
+  if(!imageUrl){
+    alert(`El producto ${position} no tiene imagen disponible para compartir.\n\n${productTitle(p)}`);
+    return;
+  }
+
+  cartShareBusy=true;
+  $("cartShareNext").disabled=true;
+  try{
+    const res=await fetch(imageUrl,{mode:'cors',cache:'no-store'});
+    if(!res.ok)throw new Error('No se pudo obtener la imagen.');
+    const blob=await res.blob();
+    const mime=blob.type&&blob.type.startsWith('image/')?blob.type:'image/jpeg';
+    const ext=mime.split('/')[1]||'jpeg';
+    const safe=(p.name||'producto').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()||'producto';
+    const file=new File([blob],safe+'.'+ext,{type:mime});
+    if(!navigator.share || !navigator.canShare || !navigator.canShare({files:[file]})){
+      throw new Error('Este navegador no permite compartir la imagen como archivo.');
+    }
+    // IMPORTANTE: esta llamada se ejecuta directamente como consecuencia del toque
+    // del usuario en "Compartir producto siguiente". Eso permite que Android vuelva
+    // a abrir el selector después de regresar del producto anterior.
+    await navigator.share({title:p.name||'Producto',text,files:[file]});
+    cartShareIndex++;
+    if(cartShareIndex<cartShareProducts.length){
+      updateCartShareUI('✅ Producto compartido correctamente.');
+    }else{
+      // Se completó todo el carrito: lo vaciamos automáticamente.
+      cartIds.clear();
+      updateCartButtons();
+      renderCart();
+      updateCartShareUI('✅ Todos los productos fueron compartidos y el carrito quedó vacío.');
+    }
+  }catch(e){
+    if(e?.name==='AbortError'){
+      updateCartShareUI('No se envió este producto. Podés volver a intentar.');
+    }else{
+      console.error('Error compartiendo producto del carrito:',e);
+      alert(`No se pudo compartir el producto ${position}.\n\n${productTitle(p)}\n\n${e?.message||'Error desconocido'}`);
+      updateCartShareUI('Podés volver a intentar este producto.');
+    }
+  }finally{
+    cartShareBusy=false;
+    $("cartShareNext").disabled=false;
+  }
+}
+
+async function sendCartWhatsApp(){
+  const products=cartProducts();
+  if(!products.length){alert('El carrito está vacío.');return;}
+  if(!navigator.share){
+    alert('Tu navegador no permite compartir productos con imagen desde el selector del sistema.');
+    return;
+  }
+  cartShareProducts=products;
+  cartShareIndex=0;
+  // Cerramos el carrito antes de mostrar el flujo de compartir para que ambos modales no se superpongan.
+  closeCart();
+  openCartShareModal();
+  updateCartShareUI('Elegí el primer producto para comenzar.');
+  // El primer selector también se abre por una interacción real del usuario.
+  await shareNextCartProduct();
+}
+
+async function shareProduct(index){
+  const p=filteredProducts[index];
+  if(!p)return;
+  const text=`${productTitle(p)}\n\n${p.q_count} cuotas quincenales de ${money(p.q_price)}\n${p.m_count} cuotas mensuales de ${money(p.m_price)}`;
+  const imageUrl=String(p.image_url||"");
+  const shareText=imageUrl ? `${text}\n\n${imageUrl}` : text;
+
+  if(!navigator.share){
+    try{
+      if(navigator.clipboard?.writeText) await navigator.clipboard.writeText(shareText);
+      alert("Tu navegador no permite compartir directamente. La ficha quedó copiada para pegarla en WhatsApp.");
+    }catch(e){
+      alert("No se pudo preparar la ficha para compartir.");
+    }
+    return;
+  }
+
+  // Primer intento: compartir la imagen original como archivo.
+  // Si el navegador bloquea la descarga de la imagen por CORS, no mostramos error:
+  // pasamos automáticamente a compartir el enlace de la imagen junto con el texto.
+  if(imageUrl){
+    try{
+      const res=await fetch(imageUrl,{mode:"cors",cache:"no-store"});
+      if(res.ok){
+        const blob=await res.blob();
+        const mime=blob.type&&blob.type.startsWith("image/")?blob.type:"image/jpeg";
+        const ext=mime.split("/")[1]||"jpeg";
+        const safe=(p.name||"producto").replace(/[^a-z0-9]+/gi,"-").replace(/^-|-$/g,"").toLowerCase()||"producto";
+        const file=new File([blob],safe+"."+ext,{type:mime});
+        if(!navigator.canShare || navigator.canShare({files:[file]})){
+          try{
+            await navigator.share({title:p.name||"Producto",text,files:[file]});
+            return;
+          }catch(e){
+            if(e?.name==="AbortError")return;
+          }
+        }
+      }
+    }catch(e){
+      // Fallback below.
+    }
+  }
+
+  // Fallback compatible con navegadores/Android que no permiten adjuntar el archivo.
+  try{
+    await navigator.share({title:p.name||"Producto",text:shareText});
+    return;
+  }catch(e){
+    if(e?.name==="AbortError")return;
+  }
+
+  try{
+    if(navigator.clipboard?.writeText) await navigator.clipboard.writeText(shareText);
+    alert("No se pudo abrir el selector de WhatsApp. La ficha quedó copiada para pegarla manualmente.");
+  }catch(e){
+    alert("No se pudo preparar la ficha para compartir.");
+  }
+}
+
+$("search").addEventListener("input",applyFilters);
+$("category").addEventListener("change",applyFilters);
+$("cartOpenButton").addEventListener("click",openCart);
+$("cartClose").addEventListener("click",closeCart);
+$("cartShareClose").addEventListener("click",closeCartShareModal);
+$("cartShareNext").addEventListener("click",shareNextCartProduct);
+$("cartSend").addEventListener("click",sendCartWhatsApp);
+$("cartClear").addEventListener("click",()=>{cartIds.clear();updateCartButtons();renderCart();});
+$("cartModal").addEventListener("click",e=>{if(e.target===$("cartModal"))closeCart();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeCart();closeCartShareModal();}});
+$("catLogout").addEventListener("click",async()=>{
+  if(deviceHeartbeat) clearInterval(deviceHeartbeat);
+  await db.auth.signOut({scope:"local"});
+  showLogin("Sesión cerrada.");
+});
+
+db=supabase.createClient(EV_CONFIG.SUPABASE_URL,EV_CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,storageKey:"electro-variety-auth"}});
+
+db.auth.onAuthStateChange((event,session)=>{
+  if(event==="SIGNED_OUT"){ if(deviceHeartbeat) clearInterval(deviceHeartbeat); showLogin(); }
+  else if(event==="SIGNED_IN"||event==="INITIAL_SESSION"||event==="TOKEN_REFRESHED"){
+    if(session)setTimeout(()=>handleSession(session),0);
+  }
+});
+
+(async function boot(){
+  try{
+    const {data,error}=await db.auth.getSession();
+    if(error){showLogin("No se pudo recuperar la sesión. Iniciá sesión nuevamente.");return}
+    if(data?.session)await handleSession(data.session);
+    else showLogin();
+  }catch(e){showLogin("No se pudo recuperar la sesión. Iniciá sesión nuevamente.");}
+})();
+</script>
+
+<script>
+(() => {
+  let deferredInstallPrompt = null;
+  const installBtn = document.getElementById("pwaInstallBtn");
+
+  function isStandalone(){
+    return window.matchMedia("(display-mode: standalone)").matches ||
+           window.navigator.standalone === true;
+  }
+
+  function showInstallButton(){
+    if(installBtn && !isStandalone()) installBtn.style.display = "block";
+  }
+
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    showInstallButton();
+  });
+
+  if(installBtn){
+    installBtn.addEventListener("click", async () => {
+      if(!deferredInstallPrompt){
+        alert("Si tu navegador no muestra la instalación automáticamente, abrí el menú ⋮ y elegí «Instalar aplicación» o «Agregar a pantalla principal».");
+        return;
+      }
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      installBtn.style.display = "none";
+    });
+  }
+
+  window.addEventListener("appinstalled", () => {
+    deferredInstallPrompt = null;
+    if(installBtn) installBtn.style.display = "none";
+  });
+
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(err =>
+        console.warn("PWA: no se pudo registrar el service worker", err)
+      );
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
