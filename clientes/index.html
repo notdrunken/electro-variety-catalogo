@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#111827">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/electro-variety-catalogo/icons/icon-192.png">
+<title>Electro Variety · Catálogo</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/electro-variety-catalogo/config.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f5f6f8;color:#111827;font-family:Arial,sans-serif}
+header{background:#111827;color:#fff;padding:18px 16px;text-align:center;position:sticky;top:0;z-index:20;box-shadow:0 3px 15px rgba(0,0,0,.15)}
+.brand{font-size:25px;font-weight:1000;letter-spacing:.4px}
+.subbrand{font-size:11px;opacity:.75;margin-top:3px}
+.wrap{max-width:1050px;margin:auto;padding:16px}
+.hero{background:#fff;border-radius:20px;padding:22px 16px;margin-bottom:16px;text-align:center}
+.hero h1{font-size:28px;line-height:1.05;margin:0 0 8px;font-weight:1000}
+.hero p{margin:0;color:#6b7280;font-size:14px}
+.search-wrap{margin-top:16px;position:relative}
+.search-input{width:100%;border:1px solid #d1d5db;background:#f9fafb;border-radius:999px;padding:14px 48px 14px 17px;font-size:15px;outline:none;color:#111827}
+.search-input:focus{border-color:#111827;background:#fff}
+.search-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:20px;pointer-events:none}
+.cart-bar{position:fixed;left:12px;right:12px;bottom:12px;z-index:40;display:none}
+.cart-button{width:100%;border:0;border-radius:999px;background:#111827;color:#fff;padding:14px 18px;font-size:14px;font-weight:1000;box-shadow:0 8px 24px rgba(0,0,0,.25);cursor:pointer}
+.cart-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;display:none;align-items:flex-end;justify-content:center;padding:12px}
+.cart-modal{width:100%;max-width:600px;max-height:82vh;overflow:auto;background:#fff;border-radius:20px;padding:18px}
+.cart-modal h2{margin:0 0 8px;font-size:22px}
+.cart-list{margin:12px 0 18px;padding:0;list-style:none}
+.cart-item{display:flex;align-items:center;gap:10px;border-bottom:1px solid #e5e7eb;padding:11px 0}
+.cart-item-name{font-size:14px;font-weight:800;flex:1}
+.cart-remove{border:0;background:#fee2e2;color:#991b1b;border-radius:999px;padding:7px 10px;font-weight:900;cursor:pointer}
+.cart-actions{display:flex;gap:8px}
+.cart-actions button{flex:1;border:0;border-radius:999px;padding:12px;font-weight:1000;cursor:pointer}
+.cart-close{background:#eef0f3;color:#111827}.cart-share{background:#16a34a;color:#fff}
+.add-cart{display:block;width:100%;border:0;cursor:pointer;text-align:center;background:#111827;color:#fff;border-radius:999px;padding:10px 8px;font-size:12px;font-weight:1000;margin-top:8px}
+.add-cart.in-cart{background:#e5e7eb;color:#111827}
+@media(min-width:700px){.cart-bar{left:auto;right:24px;bottom:24px;width:320px}}
+.section{background:#fff;border-radius:18px;padding:16px;margin-bottom:16px}
+.section h2{font-size:20px;margin:0 0 12px;font-weight:1000}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.horizontal{display:flex;gap:9px;overflow-x:auto;padding:3px 1px 8px;scrollbar-width:none}
+.horizontal::-webkit-scrollbar{display:none}
+.cat{white-space:nowrap;border:0;background:#eef0f3;color:#111827;border-radius:999px;padding:11px 17px;font-weight:900;font-size:13px;cursor:pointer}
+.cat.active{background:#111827;color:#fff}
+.media-wrap{position:relative;overflow:hidden;border-radius:15px;background:#111;aspect-ratio:16/9}
+.media-track{display:flex;width:100%;height:100%;transition:transform .35s ease}
+.media-slide{min-width:100%;height:100%;position:relative}
+.media-slide img,.media-slide video{width:100%;height:100%;object-fit:cover;display:block}
+.media-caption{position:absolute;left:0;right:0;bottom:0;padding:30px 14px 12px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.75));font-weight:900}
+.media-btn{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:22px;z-index:2}
+.media-btn.prev{left:9px}.media-btn.next{right:9px}
+.dots{text-align:center;margin-top:9px}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#d1d5db;margin:0 3px}
+.dot.active{background:#111827}
+.product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.product-card{border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+.product-card img{width:100%;aspect-ratio:1/1;object-fit:cover;background:#eef0f3}
+.product-body{padding:11px;display:flex;flex-direction:column;flex:1}
+.product-cat{font-size:10px;color:#6b7280;font-weight:900;text-transform:uppercase}
+.product-name{font-size:16px;font-weight:1000;margin:5px 0}
+.product-desc{font-size:12px;color:#6b7280;line-height:1.35;margin-bottom:10px}
+.wa{display:block;width:100%;border:0;cursor:pointer;text-align:center;text-decoration:none;background:#16a34a;color:#fff;border-radius:999px;padding:10px 8px;font-size:12px;font-weight:1000;margin-top:auto}
+.empty{color:#6b7280;font-size:13px;text-align:center;padding:14px}
+.detail-wrap{background:#fff;border-radius:20px;padding:16px;margin-bottom:16px}
+.detail-back{border:0;background:#eef0f3;color:#111827;border-radius:999px;padding:10px 15px;font-weight:900;cursor:pointer;margin-bottom:14px}
+.detail-image{width:100%;max-height:520px;object-fit:contain;background:#f3f4f6;border-radius:16px;display:block}
+.detail-name{font-size:26px;font-weight:1000;line-height:1.1;margin:15px 0 8px}
+.detail-desc{color:#6b7280;line-height:1.45;font-size:14px}
+.detail-finance{margin-top:16px;background:#f8fafc;border-radius:16px;padding:14px}
+.detail-finance h3{margin:0 0 10px;font-size:18px}
+.detail-row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid #e5e7eb;font-size:14px}
+.detail-row:first-of-type{border-top:0}
+.detail-row b{font-weight:1000}
+.detail-wa{display:block;width:100%;border:0;background:#16a34a;color:#fff;border-radius:999px;padding:14px;font-size:15px;font-weight:1000;margin-top:16px;cursor:pointer}
+
+.loading{padding:40px;text-align:center;color:#6b7280}
+#categoryResults{scroll-margin-top:80px}
+@media(min-width:700px){.product-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.hero h1{font-size:36px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">ELECTRO VARIETY</div>
+  <div class="subbrand">Todo lo que necesitás, en un solo lugar</div>
+</header>
+<main class="wrap">
+<section id="productDetail" class="detail-wrap" style="display:none"></section>
+<div id="catalogContent">
+<div id="pushNotice" style="display:none;margin:0 0 12px;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:13px 14px;box-shadow:0 4px 14px rgba(0,0,0,.05)">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="font-size:24px">🔔</div><div style="flex:1"><b>Recibí novedades de Electro Variety</b><div class="small">Te avisaremos cuando haya nuevos ingresos, tendencias o próximos productos.</div></div>
+    <button id="enablePush" type="button" style="border:0;border-radius:999px;background:#111827;color:#fff;padding:10px 13px;font-weight:900">Activar</button>
+  </div>
+</div>
+  <section class="hero">
+    <h1>¿QUÉ ESTÁS NECESITANDO?</h1>
+    <p>Elegí una categoría y descubrí nuestros productos.</p>
+    <div class="search-wrap">
+      <input id="searchInput" class="search-input" type="search" autocomplete="off" placeholder="¿Qué producto estás buscando?" aria-label="Buscar producto">
+      <span class="search-icon">🔍</span>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title"><h2>🛍️ Categorías</h2></div>
+    <div id="categories" class="horizontal"></div>
+  </section>
+
+  <section class="section" id="mediaSection">
+    <div class="section-title"><h2>🚚 ENTREGAS REALES</h2></div>
+    <div id="mediaCarousel"><div class="loading">Cargando contenido…</div></div>
+  </section>
+
+  <section class="section" id="trendingSection">
+    <div class="section-title"><h2>🔥 PRODUCTOS EN TENDENCIA</h2></div>
+    <div id="trending" class="product-grid"></div>
+  </section>
+
+  <section class="section" id="newSection">
+    <div class="section-title"><h2>🆕 NUEVOS INGRESOS</h2></div>
+    <div id="newProducts" class="product-grid"></div>
+  </section>
+
+  <section class="section" id="comingSection">
+    <div class="section-title"><h2>🔜 PRÓXIMAMENTE</h2></div>
+    <div id="comingSoon" class="product-grid"></div>
+  </section>
+
+  <section class="section" id="categoryResults">
+    <div class="section-title"><h2 id="categoryTitle">🛒 TODOS LOS PRODUCTOS</h2></div>
+    <div id="products" class="product-grid"></div>
+  </section>
+</div>
+</main>
+
+<div id="cartBar" class="cart-bar">
+  <button id="openCart" class="cart-button" type="button">🛒 Ver carrito (0)</button>
+</div>
+
+<div id="cartBackdrop" class="cart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
+  <div class="cart-modal">
+    <h2 id="cartTitle">🛒 Productos seleccionados</h2>
+    <div id="cartList"></div>
+    <div class="cart-actions">
+      <button id="closeCart" class="cart-close" type="button">Cerrar</button>
+      <button id="shareCart" class="cart-share" type="button">📲 Consultar por WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+(() => {
+  const db=supabase.createClient(EV_CONFIG.SUPABASE_URL,EV_CONFIG.SUPABASE_ANON_KEY);
+  const PUSH_VAPID_PUBLIC_KEY="BMlz3G8Al0zPdVVYTPtcQ65xOP9qqa0O8W23ubnApHkzSmT837k53-TX7CuAeGW0jFcX7EbFxYXv06W_7kAtIbE";
+  let products=[];
+  let features=[];
+  let selectedCategory="";
+  let media=[];
+  let mediaIndex=0;
+  let mediaTimer=null;
+  const cart=new Set();
+  let searchTerm="";
+
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+  const waText=p=>`Hola, quiero consultar por este producto:\n\n${p.name}`;
+  const waLink=p=>`https://wa.me/?text=${encodeURIComponent(waText(p))}`;
+
+  function sortProducts(list){
+    const collator=new Intl.Collator("es",{numeric:true,sensitivity:"base",ignorePunctuation:true});
+    return [...list].sort((a,b)=>collator.compare(String(a.name||""),String(b.name||"")));
+  }
+
+  function productCard(p){
+    const title=p.name||"Producto";
+    const desc=p.subtitle||"Consultanos por disponibilidad y características.";
+    return `<article class="product-card">
+      ${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(title)}" loading="lazy">`:"<div style=\"aspect-ratio:1/1;background:#eef0f3\"></div>"}
+      <div class="product-body">
+        <div class="product-cat">${esc(p.category||"Producto")}</div>
+        <div class="product-name">${esc(title)}</div>
+        <div class="product-desc">${esc(desc)}</div>
+        <button class="wa" type="button" data-wa-index="${String(p.id)}">💬 CONSULTAR POR WHATSAPP</button>
+        <button class="add-cart" type="button" data-cart-id="${String(p.id)}">➕ Agregar al carrito</button>
+      </div>
+    </article>`;
+  }
+
+  function renderGrid(id,list,emptyText){
+    const box=$(id);
+    const data=sortProducts(list);
+    box.innerHTML=data.length?data.map(productCard).join(""):`<div class="empty" style="grid-column:1/-1">${esc(emptyText)}</div>`;
+    box.querySelectorAll("[data-wa-index]").forEach(btn=>{
+      btn.addEventListener("click",()=>shareProductByWhatsApp(String(btn.dataset.waIndex)));
+    });
+    box.querySelectorAll("[data-cart-id]").forEach(btn=>{
+      const id=String(btn.dataset.cartId);
+      syncCartButton(btn,id);
+      btn.addEventListener("click",()=>toggleCart(id));
+    });
+  }
+
+  function renderCategories(){
+    const cats=[...new Set(products.map(p=>String(p.category||"").trim()).filter(Boolean))]
+      .sort((a,b)=>a.localeCompare(b,"es"));
+    $("categories").innerHTML=
+      `<button class="cat ${selectedCategory===""?"active":""}" data-cat="">Todos</button>`+
+      cats.map(c=>`<button class="cat ${selectedCategory===c?"active":""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
+    document.querySelectorAll("[data-cat]").forEach(btn=>btn.addEventListener("click",()=>{
+      selectedCategory=btn.dataset.cat||"";
+      renderCategories();
+      renderCategoryProducts();
+      $("categoryResults").scrollIntoView({behavior:"smooth",block:"start"});
+    }));
+  }
+
+  function renderCategoryProducts(){
+    let list=selectedCategory?products.filter(p=>String(p.category||"").trim()===selectedCategory):products;
+    if(searchTerm){
+      const q=searchTerm.toLocaleLowerCase("es");
+      list=list.filter(p=>[p.name,p.subtitle,p.category].some(v=>String(v||"").toLocaleLowerCase("es").includes(q)));
+    }
+    $("categoryTitle").textContent=searchTerm?`🔎 RESULTADOS PARA "${searchTerm.toUpperCase()}"`:selectedCategory?`🛒 ${selectedCategory.toUpperCase()}`:"🛒 TODOS LOS PRODUCTOS";
+    renderGrid("products",list,searchTerm?"No encontramos productos disponibles con esa búsqueda.":"No hay productos disponibles en esta categoría.");
+  }
+
+  function renderFeatured(){
+    const map=new Map(features.map(f=>[String(f.product_id),f]));
+    renderGrid("trending",products.filter(p=>map.get(String(p.id))?.trending),"Todavía no hay productos destacados en tendencia.");
+    renderGrid("newProducts",products.filter(p=>map.get(String(p.id))?.new_entry),"Todavía no hay nuevos ingresos publicados.");
+    renderGrid("comingSoon",products.filter(p=>map.get(String(p.id))?.coming_soon),"Próximamente vas a encontrar novedades acá.");
+  }
+
+  function syncCartButton(btn,id){
+    const inCart=cart.has(String(id));
+    btn.classList.toggle("in-cart",inCart);
+    btn.textContent=inCart?"✓ En carrito":"➕ Agregar al carrito";
+  }
+
+  function updateCartBar(){
+    const n=cart.size;
+    $("cartBar").style.display=n?"block":"none";
+    $("openCart").textContent=`🛒 Ver carrito (${n})`;
+  }
+
+  function toggleCart(id){
+    id=String(id);
+    if(cart.has(id)) cart.delete(id); else cart.add(id);
+    updateCartBar();
+    document.querySelectorAll(`[data-cart-id="${CSS.escape(id)}"]`).forEach(btn=>syncCartButton(btn,id));
+  }
+
+  function renderCart(){
+    const list=$("cartList");
+    const selected=products.filter(p=>cart.has(String(p.id)));
+    if(!selected.length){
+      list.innerHTML='<div class="empty">No hay productos seleccionados.</div>';
+      return;
+    }
+    list.innerHTML=`<ul class="cart-list">${selected.map(p=>`<li class="cart-item"><span class="cart-item-name">${esc(p.name||"Producto")}</span><button class="cart-remove" type="button" data-remove-cart="${String(p.id)}">Quitar</button></li>`).join("")}</ul>`;
+    list.querySelectorAll("[data-remove-cart]").forEach(btn=>btn.onclick=()=>{toggleCart(String(btn.dataset.removeCart));renderCart();});
+  }
+
+  function openCart(){
+    renderCart();
+    $("cartBackdrop").style.display="flex";
+  }
+  function closeCart(){ $("cartBackdrop").style.display="none"; }
+
+  async function shareCartByWhatsApp(){
+    const selected=products.filter(p=>cart.has(String(p.id)));
+    if(!selected.length)return;
+    const text=`Hola, quiero consultar por estos productos:\n\n${selected.map(p=>p.name||"Producto").join("\n\n")}`;
+    if(!navigator.share){
+      alert("Tu dispositivo no permite abrir el selector de compartir.");
+      return;
+    }
+    try{
+      await navigator.share({title:"Consulta de productos",text});
+      cart.clear();
+      updateCartBar();
+      closeCart();
+      document.querySelectorAll("[data-cart-id]").forEach(btn=>syncCartButton(btn,String(btn.dataset.cartId)));
+    }catch(e){
+      if(e?.name!=="AbortError") console.warn("No se pudo abrir el selector de compartir.",e);
+    }
+  }
+
+  function getProductFromQuery(){
+    try{ return new URLSearchParams(location.search).get("producto") || ""; }catch(_){ return ""; }
+  }
+
+  function shouldShowFinance(){
+    try{
+      const value=new URLSearchParams(location.search).get("cuotas");
+      return value !== "0";
+    }catch(_){ return true; }
+  }
+
+  function money(v){
+    if(v===null||v===undefined||String(v).trim()==="") return "";
+    return String(v).startsWith("$")?String(v):"$"+String(v);
+  }
+
+  function renderProductDetail(){
+    const id=getProductFromQuery();
+    const detail=$("productDetail"), catalog=$("catalogContent");
+    if(!id){ detail.style.display="none"; catalog.style.display="block"; return; }
+    const p=products.find(x=>String(x.id)===String(id));
+    if(!p){
+      detail.style.display="block";
+      catalog.style.display="none";
+      detail.innerHTML='<button class="detail-back" type="button" id="detailBack">← Volver al catálogo</button><div class="empty">Este producto ya no está disponible.</div>';
+      $("detailBack").onclick=()=>{ history.pushState({},"",location.pathname); renderProductDetail(); };
+      return;
+    }
+    detail.style.display="block"; catalog.style.display="none";
+    const qCount=Number(p.q_count)||0, mCount=Number(p.m_count)||0;
+    const qPrice=money(p.q_price), mPrice=money(p.m_price);
+    const showFinance=shouldShowFinance();
+    const financeHtml=showFinance?`
+      <div class="detail-finance">
+        <h3>💳 Opciones de financiación</h3>
+        ${qCount&&qPrice?`<div class="detail-row"><span>${qCount} cuotas quincenales</span><b>${esc(qPrice)}</b></div>`:""}
+        ${mCount&&mPrice?`<div class="detail-row"><span>${mCount} cuotas mensuales</span><b>${esc(mPrice)}</b></div>`:""}
+        ${(!qCount||!qPrice)&&(!mCount||!mPrice)?'<div class="small">Consultanos por las opciones disponibles.</div>':''}
+      </div>`:"";
+    detail.innerHTML=`
+      <button class="detail-back" type="button" id="detailBack">← Volver al catálogo</button>
+      ${p.image_url?`<img class="detail-image" src="${esc(p.image_url)}" alt="${esc(p.name||"Producto")}">`:''}
+      <div class="detail-name">${esc(p.name||"Producto")}</div>
+      <div class="detail-desc">${esc(p.subtitle||"Consultanos por disponibilidad y características.")}</div>
+      ${financeHtml}
+      <button class="detail-wa" type="button" id="detailWhatsApp">💬 CONSULTAR POR WHATSAPP</button>`;
+    $("detailBack").onclick=()=>{ history.pushState({},"",location.pathname); renderProductDetail(); };
+    $("detailWhatsApp").onclick=()=>shareProductByWhatsApp(String(p.id));
+  }
+
+  function stopVideos(){
+    document.querySelectorAll("#mediaCarousel video").forEach(v=>{try{v.pause()}catch(e){}});
+  }
+
+  function renderMedia(){
+    const box=$("mediaCarousel");
+    if(!media.length){box.innerHTML='<div class="empty">Todavía no hay entregas publicadas.</div>';return;}
+    box.innerHTML=`<div class="media-wrap">
+      <button class="media-btn prev" id="mediaPrev" aria-label="Anterior">‹</button>
+      <div class="media-track" id="mediaTrack">${media.map((m,i)=>`<div class="media-slide">
+        ${m.media_type==="video"
+          ?`<video src="${esc(m.media_url)}" controls playsinline preload="${i===0?"metadata":"none"}"></video>`
+          :`<img src="${esc(m.media_url)}" alt="${esc(m.title||"Entrega Electro Variety")}" loading="${i===0?"eager":"lazy"}">`}
+        ${m.title?`<div class="media-caption">${esc(m.title)}</div>`:""}
+      </div>`).join("")}</div>
+      <button class="media-btn next" id="mediaNext" aria-label="Siguiente">›</button>
+    </div>
+    <div class="dots">${media.map((_,i)=>`<span class="dot ${i===0?"active":""}" data-media-dot="${i}"></span>`).join("")}</div>`;
+    $("mediaPrev").onclick=()=>changeMedia(-1);
+    $("mediaNext").onclick=()=>changeMedia(1);
+    document.querySelectorAll("[data-media-dot]").forEach(d=>d.onclick=()=>goMedia(Number(d.dataset.mediaDot)));
+    if(media.length>1){
+      clearInterval(mediaTimer);
+      mediaTimer=setInterval(()=>changeMedia(1),6000);
+    }
+  }
+
+  function goMedia(i){
+    if(!media.length)return;
+    mediaIndex=(i+media.length)%media.length;
+    const track=$("mediaTrack"); if(track) track.style.transform=`translateX(-${mediaIndex*100}%)`;
+    document.querySelectorAll("[data-media-dot]").forEach((d,n)=>d.classList.toggle("active",n===mediaIndex));
+    stopVideos();
+  }
+  function changeMedia(delta){goMedia(mediaIndex+delta)}
+
+  async function shareProductByWhatsApp(productId){
+    const p=products.find(x=>String(x.id)===String(productId));
+    if(!p)return;
+    const text=waText(p);
+    const imageUrl=String(p.image_url||"").trim();
+    if(!navigator.share){
+      window.open(waLink(p),"_blank","noopener");
+      return;
+    }
+    if(imageUrl){
+      try{
+        const res=await fetch(imageUrl,{mode:"cors",cache:"no-store"});
+        if(res.ok){
+          const blob=await res.blob();
+          const mime=blob.type&&blob.type.startsWith("image/")?blob.type:"image/jpeg";
+          const ext=mime.split("/")[1]||"jpeg";
+          const safe=(p.name||"producto").replace(/[^a-z0-9]+/gi,"-").replace(/^-|-$/g,"").toLowerCase()||"producto";
+          const file=new File([blob],safe+"."+ext,{type:mime});
+          if(!navigator.canShare || navigator.canShare({files:[file]})){
+            try{
+              await navigator.share({title:p.name||"Producto",text,files:[file]});
+              return;
+            }catch(e){
+              if(e?.name==="AbortError")return;
+            }
+          }
+        }
+      }catch(e){
+        console.warn("No se pudo adjuntar la imagen; se usará el enlace de WhatsApp.",e);
+      }
+    }
+    try{
+      await navigator.share({title:p.name||"Producto",text});
+      return;
+    }catch(e){
+      if(e?.name==="AbortError")return;
+    }
+    window.open(waLink(p),"_blank","noopener");
+  }
+
+  function urlBase64ToUint8Array(base64String){
+    const padding="=".repeat((4-base64String.length%4)%4);
+    const base64=(base64String+padding).replace(/-/g,"+").replace(/_/g,"/");
+    const rawData=atob(base64);
+    return Uint8Array.from([...rawData].map(c=>c.charCodeAt(0)));
+  }
+
+  async function registerClientPush(){
+    const notice=document.getElementById("pushNotice");
+    const btn=document.getElementById("enablePush");
+    if(!notice||!btn) return;
+    if(!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return;
+    if(Notification.permission==="denied"){ notice.style.display="none"; return; }
+    try{
+      await navigator.serviceWorker.register("/electro-variety-catalogo/sw.js");
+      const reg=await navigator.serviceWorker.ready;
+      const existing=await reg.pushManager.getSubscription();
+      if(existing){ await savePushSubscription(existing); notice.style.display="none"; return; }
+      notice.style.display="block";
+      btn.onclick=async()=>{
+        btn.disabled=true; btn.textContent="Activando…";
+        try{
+          const permission=await Notification.requestPermission();
+          if(permission!=="granted"){ notice.style.display="none"; return; }
+          const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(PUSH_VAPID_PUBLIC_KEY)});
+          await savePushSubscription(sub);
+          btn.textContent="✓ Activadas";
+          notice.style.display="none";
+        }catch(error){
+          console.error(error);
+          btn.disabled=false; btn.textContent="Activar";
+          console.error("Error al activar Push:", error?.name, error?.message, error);
+          alert("No se pudieron activar las notificaciones en este dispositivo. Cerrá y volvé a abrir la aplicación una vez e intentá nuevamente.");
+        }
+      };
+    }catch(error){ console.error("Push setup",error); }
+  }
+
+  async function savePushSubscription(sub){
+    const json=sub.toJSON();
+    if(!json.endpoint||!json.keys?.p256dh||!json.keys?.auth) throw new Error("Suscripción Push incompleta");
+    const {error}=await db.rpc("save_client_push_subscription",{
+      p_endpoint:json.endpoint,
+      p_p256dh:json.keys.p256dh,
+      p_auth:json.keys.auth,
+      p_user_agent:navigator.userAgent
+    });
+    if(error) throw error;
+  }
+
+  async function load(){
+    try{
+      const [pRes,fRes,mRes]=await Promise.all([
+        db.from("products").select("id,name,subtitle,category,image_url,active,stock,q_price,q_count,m_price,m_count").eq("active",true),
+        db.from("client_product_features").select("product_id,trending,new_entry,coming_soon"),
+        db.from("client_media").select("id,media_url,media_type,title,sort_order,created_at").eq("active",true).order("sort_order",{ascending:true})
+      ]);
+      if(pRes.error)throw pRes.error;
+      // El catálogo para clientes solamente muestra productos que el catálogo de vendedores
+      // considera disponibles: stock -1 (Hay stock) o stock mayor que 0.
+      products=(pRes.data||[]).filter(p=>Number(p.stock)===-1 || Number(p.stock)>0);
+      features=fRes.error?[]:(fRes.data||[]);
+      media=mRes.error?[]:(mRes.data||[]);
+      renderCategories();
+      renderCategoryProducts();
+      renderFeatured();
+      renderMedia();
+      renderProductDetail();
+    }catch(error){
+      console.error(error);
+      $("products").innerHTML=`<div class="empty" style="grid-column:1/-1">No se pudo cargar el catálogo. Intentá nuevamente en unos segundos.</div>`;
+    }
+  }
+  $("searchInput").addEventListener("input",e=>{
+    searchTerm=String(e.target.value||"").trim();
+    renderCategoryProducts();
+    if(searchTerm) $("categoryResults").scrollIntoView({behavior:"smooth",block:"start"});
+  });
+  $("openCart").addEventListener("click",openCart);
+  $("closeCart").addEventListener("click",closeCart);
+  $("shareCart").addEventListener("click",shareCartByWhatsApp);
+  $("cartBackdrop").addEventListener("click",e=>{if(e.target.id==="cartBackdrop")closeCart();});
+  updateCartBar();
+  window.addEventListener("popstate",renderProductDetail);
+  load();
+  registerClientPush();
+})();
+</script>
+<script src="./pwa-install.js"></script>
+<script>if ("serviceWorker" in navigator) { window.addEventListener("load", function(){ navigator.serviceWorker.register("/electro-variety-catalogo/sw.js").catch(function(err){ console.warn("PWA: no se pudo registrar el service worker", err); }); }); }</script>
+</body>
+</html>
